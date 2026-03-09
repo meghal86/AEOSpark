@@ -58,7 +58,7 @@ export function EmailCaptureGate(props: {
       window.localStorage.setItem(unlockKey(props.website), "true");
       setIsUnlocked(true);
       setStatus(
-        "Full recommendation set unlocked. The summary email and follow-up sequence were queued in local mock mode.",
+        "Unlocked. Check your inbox for the summary.",
       );
     } catch (caughtError) {
       setStatus(
@@ -72,7 +72,7 @@ export function EmailCaptureGate(props: {
   }
 
   return (
-    <section className="grid gap-5 rounded-[2rem] border border-white/10 bg-white/6 p-6 backdrop-blur">
+    <section className="grid gap-5 rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
@@ -82,10 +82,7 @@ export function EmailCaptureGate(props: {
             Full 10-fix roadmap
           </h2>
         </div>
-        <p className="max-w-xl text-sm text-slate-300">
-          The first three recommendations stay public. The remaining fixes unlock
-          after email capture, matching the FRD gate.
-        </p>
+        <p className="max-w-xl text-sm text-slate-100/88">First 3 fixes are free. The rest unlock after email.</p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
@@ -102,17 +99,17 @@ export function EmailCaptureGate(props: {
                 key={recommendation.id}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
                     Fix {index + 1}
                   </span>
-                  <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300">
+                  <span className="rounded-full border border-white/12 bg-white/6 px-3 py-1 text-xs text-slate-100/88">
                     {recommendation.impact} impact / {recommendation.effort} effort
                   </span>
                 </div>
                 <h3 className="mt-3 text-lg font-semibold text-white">
                   {locked ? "Unlock full roadmap" : recommendation.title}
                 </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-300">
+                <p className="mt-2 text-sm leading-6 text-slate-100/88">
                   {locked
                     ? "This recommendation is intentionally hidden until the lead gate is completed."
                     : recommendation.detail}
@@ -124,12 +121,9 @@ export function EmailCaptureGate(props: {
 
         <div className="rounded-3xl border border-sky-400/20 bg-sky-500/10 p-5">
           <h3 className="text-xl font-semibold text-white">
-            Email gate unlock
+            Unlock full roadmap
           </h3>
-          <p className="mt-3 text-sm leading-6 text-slate-200">
-            Capture name and business email to queue the 3-page summary, unlock all
-            recommendations, and arm the audit CTA.
-          </p>
+          <p className="mt-3 text-sm leading-6 text-slate-50">Enter your details to see all 10 fixes.</p>
 
           <form className="mt-5 grid gap-3" onSubmit={handleSubmit}>
             <input
@@ -149,7 +143,7 @@ export function EmailCaptureGate(props: {
             />
 
             <button
-              className="inline-flex h-12 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-950 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-12 items-center justify-center rounded-2xl bg-white text-sm font-bold text-slate-950 shadow-[0_12px_35px_rgba(255,255,255,0.16)] transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isSubmitting}
               type="submit"
             >
@@ -157,19 +151,8 @@ export function EmailCaptureGate(props: {
             </button>
           </form>
 
-          <div className="mt-5 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300/90">
-              What happens next
-            </p>
-            <ul className="mt-3 grid gap-2 text-sm text-slate-300">
-              <li>Summary email queued immediately</li>
-              <li>48-hour follow-up nudge queued</li>
-              <li>Audit checkout prefill becomes available</li>
-            </ul>
-          </div>
-
           {status ? (
-            <p className="mt-4 text-sm text-sky-100">{status}</p>
+            <p className="mt-4 text-sm text-white">{status}</p>
           ) : null}
         </div>
       </div>

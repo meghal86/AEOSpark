@@ -9,12 +9,12 @@ export default function NotFound() {
       <h1 className="text-4xl font-semibold tracking-tight text-white">
         The requested record could not be found.
       </h1>
-      <p className="max-w-2xl text-base leading-7 text-slate-300">
+      <p className="max-w-2xl text-base leading-7 text-slate-100/88">
         If you refreshed a score or order from a different environment, it may not
         exist in the local JSON store yet.
       </p>
       <Link
-        className="inline-flex h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-semibold text-slate-950 transition hover:bg-sky-100"
+        className="inline-flex h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-bold text-slate-950 shadow-[0_12px_35px_rgba(255,255,255,0.16)] transition hover:bg-sky-100"
         href="/"
       >
         Back to home

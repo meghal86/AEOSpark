@@ -64,7 +64,7 @@ export function AuditCheckoutForm(props: {
   }
 
   return (
-    <section className="grid gap-5 rounded-[2rem] border border-white/10 bg-white/6 p-6 backdrop-blur">
+    <section className="grid gap-5 rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
           Screen 3
@@ -72,10 +72,8 @@ export function AuditCheckoutForm(props: {
         <h2 className="mt-2 text-2xl font-semibold text-white">
           Audit checkout
         </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-          This is wired as a local-first checkout flow. The server records orders,
-          creates the client portal on success, and logs the audit pipeline job. Swap
-          the order route to real Stripe when credentials are available.
+        <p className="mt-3 max-w-xl text-sm leading-6 text-slate-100/88">
+          One payment. Audit delivered within 24 hours.
         </p>
       </div>
 
@@ -109,7 +107,7 @@ export function AuditCheckoutForm(props: {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <button
-              className="inline-flex h-12 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-950 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-12 items-center justify-center rounded-2xl bg-white text-sm font-bold text-slate-950 shadow-[0_12px_35px_rgba(255,255,255,0.16)] transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isSubmitting}
               onClick={() => submit("paid")}
               type="button"
@@ -133,23 +131,12 @@ export function AuditCheckoutForm(props: {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300/80">
             Included
           </p>
-          <ul className="mt-4 grid gap-3 text-sm leading-6 text-slate-300">
-            <li>Deep crawl of your top 50 pages and money pages</li>
-            <li>25-query citation baseline across major AI platforms</li>
-            <li>Competitor citation-share comparison for top challengers</li>
-            <li>20-page audit PDF plus editable document handoff</li>
-            <li>30-minute strategy call and retainer recommendation</li>
+          <ul className="mt-4 grid gap-3 text-sm leading-6 text-slate-100/88">
+            <li>50-page crawl</li>
+            <li>25-query citation baseline</li>
+            <li>Competitor comparison</li>
+            <li>Audit PDF + strategy call</li>
           </ul>
-
-          <div className="mt-6 rounded-3xl border border-white/10 bg-white/6 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-              After payment
-            </p>
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              The confirmation page becomes available immediately, the order is stored,
-              the audit pipeline job is queued, and a client portal record is created.
-            </p>
-          </div>
         </div>
       </div>
     </section>

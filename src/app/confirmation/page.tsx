@@ -39,22 +39,18 @@ export default async function ConfirmationPage({
 
         <div className="grid gap-3">
           <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">
-            Audit booked successfully
+            Audit booked
           </h1>
-          <p className="max-w-3xl text-base leading-7 text-emerald-50/85">
-            The confirmation flow is active. The order has been stored, the
-            `audit.requested` job was queued, and the portal record is ready for the
-            implementation team.
-          </p>
+          <p className="max-w-xl text-base leading-7 text-emerald-50/85">We’ll send your audit within 24 hours.</p>
         </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-        <article className="rounded-[2rem] border border-white/10 bg-white/6 p-6 backdrop-blur">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
             Order details
           </p>
-          <div className="mt-4 grid gap-3 text-sm text-slate-300">
+          <div className="mt-4 grid gap-3 text-sm text-slate-100/88">
             <p>
               <span className="font-semibold text-white">Company:</span>{" "}
               {order.companyName || order.website}
@@ -76,22 +72,21 @@ export default async function ConfirmationPage({
           </div>
         </article>
 
-        <article className="rounded-[2rem] border border-white/10 bg-white/6 p-6 backdrop-blur">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
             What happens next
           </p>
-          <div className="mt-4 grid gap-3 text-sm leading-6 text-slate-300">
-            <p>1. Deep crawl and citation baseline job begins.</p>
-            <p>2. Audit PDF delivery target is within 24 hours.</p>
-            <p>3. Strategy call is the retainer pitch moment.</p>
-            <p>4. The monitor portal is already staged for client-facing reporting.</p>
+          <div className="mt-4 grid gap-3 text-sm leading-6 text-slate-100/88">
+            <p>1. We crawl your site.</p>
+            <p>2. We build your audit.</p>
+            <p>3. You book the strategy call.</p>
           </div>
         </article>
       </section>
 
-      <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-white/6 p-6 backdrop-blur md:grid-cols-2">
+      <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur md:grid-cols-2">
         <Link
-          className="inline-flex h-14 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-950 transition hover:bg-sky-100"
+          className="inline-flex h-14 items-center justify-center rounded-2xl bg-white text-sm font-bold text-slate-950 shadow-[0_12px_35px_rgba(255,255,255,0.16)] transition hover:bg-sky-100"
           href="https://calendly.com"
           rel="noreferrer"
           target="_blank"
@@ -101,7 +96,7 @@ export default async function ConfirmationPage({
 
         {order.clientId ? (
           <Link
-            className="inline-flex h-14 items-center justify-center rounded-2xl border border-white/12 px-4 text-sm font-semibold text-white transition hover:border-sky-300/50"
+            className="inline-flex h-14 items-center justify-center rounded-2xl border border-white/18 bg-slate-900/80 px-4 text-sm font-semibold text-white transition hover:border-sky-300/60 hover:bg-slate-800"
             href={`/monitor/${order.clientId}`}
           >
             Open client portal

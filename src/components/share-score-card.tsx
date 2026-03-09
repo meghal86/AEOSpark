@@ -45,7 +45,7 @@ export function ShareScoreCard(props: {
   }
 
   return (
-    <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-white/6 p-6 backdrop-blur">
+    <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
@@ -58,14 +58,14 @@ export function ShareScoreCard(props: {
 
         <div className="flex flex-wrap gap-3">
           <button
-            className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/12 px-4 text-sm font-semibold text-white transition hover:border-sky-300/50"
+            className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/18 bg-slate-900/80 px-4 text-sm font-semibold text-white transition hover:border-sky-300/60 hover:bg-slate-800"
             onClick={downloadCard}
             type="button"
           >
             Download PNG
           </button>
           <button
-            className="inline-flex h-11 items-center justify-center rounded-2xl bg-sky-400 px-4 text-sm font-semibold text-slate-950 transition hover:bg-sky-300"
+            className="inline-flex h-11 items-center justify-center rounded-2xl bg-sky-300 px-4 text-sm font-bold text-slate-950 shadow-[0_12px_35px_rgba(56,189,248,0.22)] transition hover:bg-sky-200"
             onClick={shareOnLinkedIn}
             type="button"
           >
@@ -87,7 +87,7 @@ export function ShareScoreCard(props: {
               <h3 className="max-w-xs text-3xl font-semibold text-white">
                 {props.companyName}
               </h3>
-              <p className="mt-2 text-sm text-slate-300">{props.url}</p>
+              <p className="mt-2 text-sm text-slate-100/88">{props.url}</p>
             </div>
             <div className="text-right">
               <p className={`text-sm font-semibold uppercase ${tone.className}`}>
@@ -105,7 +105,7 @@ export function ShareScoreCard(props: {
                 className="rounded-3xl border border-white/10 bg-black/20 p-4"
                 key={dimension.label}
               >
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-200/80">
                   Weakest dimension
                 </p>
                 <div className="mt-3 flex items-center justify-between gap-4">

@@ -30,6 +30,16 @@ body {
   font-family: var(--font-dm-sans), sans-serif;
 }
 
+::placeholder {
+  color: rgba(226, 232, 240, 0.72);
+}
+
+button,
+input,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
 h1,
 h2,
 h3,

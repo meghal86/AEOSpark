@@ -48,7 +48,7 @@ export function UrlIntakeForm() {
 
   return (
     <form
-      className="grid gap-4 rounded-[2rem] border border-white/12 bg-white/6 p-5 shadow-[0_30px_120px_rgba(8,14,26,0.65)] backdrop-blur"
+      className="grid gap-4 rounded-[2rem] border border-white/14 bg-slate-950/70 p-5 shadow-[0_30px_120px_rgba(8,14,26,0.65)] backdrop-blur"
       onSubmit={handleSubmit}
     >
       <div className="grid gap-3 md:grid-cols-[1.4fr_1fr]">
@@ -77,12 +77,11 @@ export function UrlIntakeForm() {
       </div>
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="text-sm text-slate-300">
-          AI crawl, heuristic score, and recommendation preview. Results typically return
-          in under 20 seconds.
+        <div className="text-sm text-slate-100/88">
+          Results usually return in under 20 seconds.
         </div>
         <button
-          className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-400 px-6 text-sm font-semibold text-slate-950 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-300 px-6 text-sm font-bold text-slate-950 shadow-[0_18px_50px_rgba(56,189,248,0.28)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isPending}
           type="submit"
         >

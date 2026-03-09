@@ -24,7 +24,7 @@ export default async function MonitorPage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-10 px-6 py-10 md:px-10">
-      <section className="grid gap-5 rounded-[2.2rem] border border-white/10 bg-white/6 p-6 backdrop-blur lg:grid-cols-[1.2fr_0.8fr]">
+      <section className="grid gap-5 rounded-[2.2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur lg:grid-cols-[1.2fr_0.8fr]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
             Phase 4 / Client portal
@@ -32,16 +32,14 @@ export default async function MonitorPage({
           <h1 className="mt-3 max-w-4xl text-4xl font-semibold tracking-tight text-white md:text-5xl">
             {client.companyName} citation monitor
           </h1>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
-            {client.dashboardHeadline}
-          </p>
+          <p className="mt-4 max-w-xl text-base leading-7 text-slate-100/88">Track share, gap, and priorities.</p>
         </div>
 
         <div className="rounded-[2rem] border border-white/10 bg-slate-950/55 p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
             Plan / portal
           </p>
-          <div className="mt-4 grid gap-3 text-sm text-slate-300">
+          <div className="mt-4 grid gap-3 text-sm text-slate-100/88">
             <p>
               <span className="font-semibold text-white">Plan:</span> {client.plan}
             </p>
@@ -58,8 +56,8 @@ export default async function MonitorPage({
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <article className="rounded-3xl border border-white/10 bg-white/6 p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        <article className="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
             Baseline citation share
           </p>
           <p className="mt-3 text-5xl font-semibold text-white">
@@ -67,8 +65,8 @@ export default async function MonitorPage({
           </p>
         </article>
 
-        <article className="rounded-3xl border border-white/10 bg-white/6 p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        <article className="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
             Current citation share
           </p>
           <p className="mt-3 text-5xl font-semibold text-white">
@@ -76,8 +74,8 @@ export default async function MonitorPage({
           </p>
         </article>
 
-        <article className="rounded-3xl border border-white/10 bg-white/6 p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        <article className="rounded-3xl border border-white/10 bg-slate-950/70 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
             Citation gap to leader
           </p>
           <p className="mt-3 text-5xl font-semibold text-white">
@@ -87,7 +85,7 @@ export default async function MonitorPage({
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        <article className="rounded-[2rem] border border-white/10 bg-white/6 p-6 backdrop-blur">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
@@ -97,7 +95,7 @@ export default async function MonitorPage({
                 60-day citation-share trend
               </h2>
             </div>
-            <p className="text-sm text-slate-400">Client vs best competitor</p>
+            <p className="text-sm text-slate-200/80">Client vs best competitor</p>
           </div>
 
           <div className="mt-6 grid gap-4">
@@ -105,7 +103,7 @@ export default async function MonitorPage({
               <div className="grid gap-2" key={point.label}>
                 <div className="flex items-center justify-between gap-3 text-sm">
                   <span className="text-white">{point.label}</span>
-                  <span className="text-slate-400">
+                  <span className="text-slate-200/80">
                     {point.citationShare}% / {point.competitorShare}%
                   </span>
                 </div>
@@ -137,10 +135,8 @@ export default async function MonitorPage({
           </div>
         </article>
 
-        <article className="rounded-[2rem] border border-white/10 bg-white/6 p-6 backdrop-blur">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
-            API key readiness
-          </p>
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">API keys</p>
           <div className="mt-5 grid gap-3">
             {client.apiKeyStatus.map((provider) => (
               <div
@@ -161,19 +157,15 @@ export default async function MonitorPage({
             ))}
           </div>
 
-          <div className="mt-6 rounded-3xl border border-white/10 bg-slate-950/55 p-4 text-sm leading-6 text-slate-300">
-            The FRD requires official APIs only. The portal models that by showing
-            provider readiness rather than scraping consumer chat UIs.
-          </div>
         </article>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[1fr_1fr]">
-        <article className="rounded-[2rem] border border-white/10 bg-white/6 p-6 backdrop-blur">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
             Monthly priorities
           </p>
-          <ul className="mt-5 grid gap-3 text-sm leading-6 text-slate-300">
+          <ul className="mt-5 grid gap-3 text-sm leading-6 text-slate-100/88">
             {client.priorities.map((priority) => (
               <li
                 className="rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-3"
@@ -185,11 +177,11 @@ export default async function MonitorPage({
           </ul>
         </article>
 
-        <article className="rounded-[2rem] border border-white/10 bg-white/6 p-6 backdrop-blur">
+        <article className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
             Delivery cadence
           </p>
-          <ul className="mt-5 grid gap-3 text-sm leading-6 text-slate-300">
+          <ul className="mt-5 grid gap-3 text-sm leading-6 text-slate-100/88">
             {client.monthlyDeliverables.map((deliverable) => (
               <li
                 className="rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-3"
@@ -204,13 +196,13 @@ export default async function MonitorPage({
 
       <section className="flex flex-wrap gap-3">
         <Link
-          className="inline-flex h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-semibold text-slate-950 transition hover:bg-sky-100"
+          className="inline-flex h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-bold text-slate-950 shadow-[0_12px_35px_rgba(255,255,255,0.16)] transition hover:bg-sky-100"
           href="/"
         >
           Run another score
         </Link>
         <Link
-          className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/12 px-5 text-sm font-semibold text-white transition hover:border-sky-300/50"
+          className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/18 bg-slate-900/80 px-5 text-sm font-semibold text-white transition hover:border-sky-300/60 hover:bg-slate-800"
           href="https://calendly.com"
           rel="noreferrer"
           target="_blank"

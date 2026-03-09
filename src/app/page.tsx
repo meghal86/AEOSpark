@@ -6,59 +6,37 @@ const phases = [
   {
     name: "Phase 1",
     title: "Acquisition",
-    detail:
-      "Free AEO score widget converts curiosity into a quantified problem. Optional competitor comparison makes the result more viral and more painful.",
+    detail: "Run a score. See the gap fast.",
   },
   {
     name: "Phase 2",
     title: "Lead capture",
-    detail:
-      "Email gate unlocks the full roadmap, queues the teaser summary, and starts the follow-up sequence without adding heavy friction.",
+    detail: "Unlock the full roadmap with email.",
   },
   {
     name: "Phase 3",
     title: "Conversion",
-    detail:
-      "Single-page audit checkout with inline decline handling turns a weak score into a paid $2,500 audit and a scheduled strategy call.",
+    detail: "Turn the score into a paid audit.",
   },
   {
     name: "Phase 4",
     title: "Retainer expansion",
-    detail:
-      "Client portal supports implementation reporting, official-API monitoring, and the eventual managed-service retainer motion.",
+    detail: "Track progress in the client portal.",
   },
 ];
 
 const pillars = [
   {
-    title: "Score the problem fast",
-    body: "Analyze a public site, break it into six AI-readiness dimensions, and make the gaps visible in one uncomfortable number.",
+    title: "Fast score",
+    body: "Six dimensions. One number.",
   },
   {
-    title: "Capture the lead cleanly",
-    body: "Keep the gate lean: name, business email, stored score context, queued PDF summary, and a 48-hour nudge.",
+    title: "Lean capture",
+    body: "Simple gate. Full roadmap.",
   },
   {
-    title: "Sell outcomes, not dashboards",
-    body: "The audit and implementation flow is the business. Monitoring exists to make the service more efficient, not to lead the motion.",
-  },
-];
-
-const dataFlows = [
-  {
-    label: "Scores",
-    detail:
-      "Stored locally in JSON for this build, shaped to swap to Supabase later with score payload, crawl status, comparison, and recommendations.",
-  },
-  {
-    label: "Lead automation",
-    detail:
-      "Lead capture queues a welcome summary plus a 48-hour follow-up job, matching the FRD nurture flow without needing live email credentials first.",
-  },
-  {
-    label: "Audit pipeline",
-    detail:
-      "Successful checkout creates the order, client portal, and queued audit job. Replace the local adapter with Stripe, Inngest, Resend, and Supabase when ready.",
+    title: "Outcome first",
+    body: "Audit, implement, improve.",
   },
 ];
 
@@ -72,7 +50,7 @@ export default function Home() {
             AEOSpark
           </div>
           <Link
-            className="text-sm font-semibold text-slate-300 transition hover:text-white"
+            className="text-sm font-semibold text-slate-100 transition hover:text-sky-200"
             href="#platform"
           >
             Platform overview
@@ -90,10 +68,8 @@ export default function Home() {
                 <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-white md:text-7xl">
                   Make brands visible in AI recommendations, then sell the implementation.
                 </h1>
-                <p className="mt-5 max-w-3xl text-base leading-8 text-slate-300 md:text-lg">
-                  This build follows the FRD directly: free widget, email gate, paid
-                  audit checkout, confirmation flow, and a client portal for
-                  citation-share reporting.
+                <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300 md:text-lg">
+                  Score a site, surface the gaps, and move high-intent leads into audit and implementation.
                 </p>
               </div>
 
@@ -104,7 +80,7 @@ export default function Home() {
                     key={pillar.title}
                   >
                     <h2 className="text-lg font-semibold text-white">{pillar.title}</h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-300">
+                    <p className="mt-2 text-sm leading-6 text-slate-100/88">
                       {pillar.body}
                     </p>
                   </article>
@@ -131,38 +107,9 @@ export default function Home() {
             <h2 className="mt-3 text-2xl font-semibold text-white">
               {phase.title}
             </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-300">{phase.detail}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-100/88">{phase.detail}</p>
           </article>
         ))}
-      </section>
-
-      <section className="grid gap-6 rounded-[2.2rem] border border-white/10 bg-white/6 p-6 backdrop-blur lg:grid-cols-[1fr_1fr]">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
-            User flow coverage
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold text-white">
-            Acquisition to retainer, built as one application
-          </h2>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-            The app covers the exact path you described: landing page, score results,
-            email gate, checkout, confirmation, and monitor dashboard. It is implemented
-            in a local-first way so it runs immediately, while the architecture leaves
-            clear swap points for Supabase, Stripe, Resend, and Inngest.
-          </p>
-        </div>
-
-        <div className="grid gap-3">
-          {dataFlows.map((flow) => (
-            <article
-              className="rounded-3xl border border-white/10 bg-slate-950/55 p-4"
-              key={flow.label}
-            >
-              <p className="text-sm font-semibold text-white">{flow.label}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-300">{flow.detail}</p>
-            </article>
-          ))}
-        </div>
       </section>
     </main>
   );

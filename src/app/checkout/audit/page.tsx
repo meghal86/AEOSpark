@@ -27,13 +27,8 @@ export default async function AuditCheckoutPage({
           Phase 3
         </p>
         <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-white md:text-5xl">
-          Paid audit conversion flow
+          Book your full audit
         </h1>
-        <p className="max-w-3xl text-base leading-7 text-slate-300">
-          This matches the FRD conversion step: one-page checkout, inline error on
-          failure, immediate confirmation on success, and a client portal record for
-          the downstream implementation workflow.
-        </p>
       </section>
 
       <AuditCheckoutForm

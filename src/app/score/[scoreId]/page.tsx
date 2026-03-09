@@ -29,13 +29,13 @@ export default async function ScorePage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-10 px-6 py-10 md:px-10">
-      <section className="grid gap-6 rounded-[2.2rem] border border-white/10 bg-white/6 p-6 backdrop-blur lg:grid-cols-[1.3fr_0.7fr]">
+      <section className="grid gap-6 rounded-[2.2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur lg:grid-cols-[1.3fr_0.7fr]">
         <div className="grid gap-5">
           <div className="flex flex-wrap items-center gap-3">
             <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-sky-200">
               Screen 2
             </span>
-            <span className="text-sm text-slate-400">
+            <span className="text-sm text-slate-300">
               Created {formatDate(score.createdAt)}
             </span>
           </div>
@@ -44,7 +44,7 @@ export default async function ScorePage({
             <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-white md:text-5xl">
               {score.companyName} AEO score
             </h1>
-            <p className="mt-3 max-w-3xl text-base leading-7 text-slate-300">
+            <p className="mt-3 max-w-2xl text-base leading-7 text-slate-100/88">
               {score.executiveSummary}
             </p>
           </div>
@@ -57,34 +57,27 @@ export default async function ScorePage({
               <p className="mt-3 text-6xl font-semibold text-white">
                 {score.overallScore}
               </p>
-              <p className="mt-3 text-sm text-slate-300">{score.verdict}</p>
+              <p className="mt-3 text-sm text-slate-100/88">{score.verdict}</p>
             </article>
 
             <article className="rounded-3xl border border-white/10 bg-slate-950/55 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
                 Crawl status
               </p>
               <p className="mt-3 text-xl font-semibold text-white">
-                {score.crawlStatus === "live" ? "Live crawl" : "Fallback heuristic"}
+                {score.crawlStatus === "live" ? "Live" : "Estimated"}
               </p>
-              <ul className="mt-3 grid gap-2 text-sm leading-6 text-slate-300">
-                {score.crawlNotes.map((note) => (
-                  <li key={note}>{note}</li>
-                ))}
-              </ul>
+              <p className="mt-3 text-sm text-slate-100/88">{score.crawlNotes[0]}</p>
             </article>
 
             <article className="rounded-3xl border border-white/10 bg-slate-950/55 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
                 Next step
               </p>
               <p className="mt-3 text-xl font-semibold text-white">
-                Full audit or managed implementation
+                Best next move
               </p>
-              <p className="mt-3 text-sm leading-6 text-slate-300">
-                The free score is the wedge. The paid audit captures the citation
-                baseline and turns fixes into a 90-day roadmap.
-              </p>
+              <p className="mt-3 text-sm leading-6 text-slate-100/88">Buy the audit to get the full roadmap.</p>
             </article>
           </div>
         </div>
@@ -93,7 +86,7 @@ export default async function ScorePage({
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
             Primary URL
           </p>
-          <p className="mt-3 text-sm leading-6 text-slate-300">{score.url}</p>
+          <p className="mt-3 text-sm leading-6 break-all text-slate-100/88">{score.url}</p>
 
           {score.comparison ? (
             <div className="mt-6 rounded-3xl border border-white/10 bg-black/20 p-4">
@@ -105,13 +98,13 @@ export default async function ScorePage({
                   <p className="text-sm font-semibold text-white">
                     {score.comparison.companyName}
                   </p>
-                  <p className="text-sm text-slate-400">{score.comparison.url}</p>
+                  <p className="break-all text-sm text-slate-200/80">{score.comparison.url}</p>
                 </div>
                 <p className="text-4xl font-semibold text-white">
                   {score.comparison.overallScore}
                 </p>
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-300">
+              <p className="mt-3 text-sm leading-6 text-slate-100/88">
                 Citation gap vs primary:{" "}
                 <span className="font-semibold text-white">
                   {score.comparison.gapVsPrimary > 0 ? "+" : ""}
@@ -123,7 +116,7 @@ export default async function ScorePage({
 
           <div className="mt-6 grid gap-3">
             <Link
-              className="inline-flex h-12 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-950 transition hover:bg-sky-100"
+              className="inline-flex h-12 items-center justify-center rounded-2xl bg-white text-sm font-bold text-slate-950 shadow-[0_12px_35px_rgba(255,255,255,0.16)] transition hover:bg-sky-100"
               href={`/checkout/audit?scoreId=${score.id}&website=${encodeURIComponent(
                 score.url,
               )}&company=${encodeURIComponent(score.companyName)}`}
@@ -131,7 +124,7 @@ export default async function ScorePage({
               Get full $2,500 audit
             </Link>
             <Link
-              className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/12 px-4 text-sm font-semibold text-white transition hover:border-sky-300/50"
+              className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/18 bg-slate-900/80 px-4 text-sm font-semibold text-white transition hover:border-sky-300/60 hover:bg-slate-800"
               href="/"
             >
               Run another score
@@ -140,7 +133,7 @@ export default async function ScorePage({
         </div>
       </section>
 
-      <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-white/6 p-6 backdrop-blur">
+      <section className="grid gap-4 rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
@@ -150,10 +143,6 @@ export default async function ScorePage({
               Six dimensions, one uncomfortable number
             </h2>
           </div>
-          <p className="max-w-2xl text-sm text-slate-300">
-            Each dimension maps to the FRD scoring model and explains why AI systems do
-            or do not cite the site.
-          </p>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
@@ -168,7 +157,7 @@ export default async function ScorePage({
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
                       {dimension.label}
                     </p>
                     <h3 className="mt-2 text-xl font-semibold text-white">
@@ -187,11 +176,11 @@ export default async function ScorePage({
                   />
                 </div>
 
-                <p className="mt-4 text-sm leading-6 text-slate-300">
+                <p className="mt-4 text-sm leading-6 text-slate-100/88">
                   {dimension.diagnosis}
                 </p>
 
-                <ul className="mt-4 grid gap-2 text-sm text-slate-400">
+                <ul className="mt-4 grid gap-2 text-sm text-slate-200/80">
                   {dimension.evidence.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
