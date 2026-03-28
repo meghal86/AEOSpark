@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEOSpark — Developer Wireframes v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--blue:#1D4ED8;--bl:#3B82F6;--bp:#EFF6FF;--dk:#0F172A;--md:#334155;--gr:#64748B;--lt:#F1F5F9;--bd:#E2E8F0;--rd:#DC2626;--gn:#16A34A;--am:#D97706;}
+body{font-family:'DM Sans',sans-serif;background:#080D1A;color:var(--dk);}
+nav{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(8,13,26,.97);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;padding:0 24px;gap:5px;z-index:200;backdrop-filter:blur(8px);}
+.logo{font-family:'Syne',sans-serif;font-weight:800;color:#fff;font-size:16px;margin-right:16px;}
+.logo span{color:var(--bl);}
+.nb{padding:5px 12px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;background:transparent;color:rgba(255,255,255,.45);transition:.15s;}
+.nb:hover{color:#fff;background:rgba(255,255,255,.06);}
+.nb.active{background:var(--blue);color:#fff;}
+.ntag{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--bl);background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);padding:3px 10px;border-radius:20px;}
+.canvas{padding-top:52px;}
+.scr{display:none;}.scr.active{display:block;}
+.wrap{max-width:1060px;margin:0 auto;padding:40px 24px;}
+.slabel{display:inline-flex;align-items:center;gap:6px;background:rgba(29,78,216,.14);border:1px solid rgba(29,78,216,.28);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;color:var(--bl);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px;}
+.stitle{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:#fff;margin-bottom:4px;}
+.sdesc{font-size:13.5px;color:rgba(255,255,255,.4);line-height:1.6;max-width:600px;margin-bottom:32px;}
+.browser{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.05);}
+.bbar{background:#F8FAFC;border-bottom:1px solid var(--bd);padding:9px 13px;display:flex;align-items:center;gap:9px;}
+.bdots{display:flex;gap:5px;}
+.bd{width:11px;height:11px;border-radius:50%;}
+.burl{flex:1;background:#fff;border:1px solid var(--bd);border-radius:5px;padding:4px 10px;font-size:11px;color:var(--gr);font-family:'DM Sans',sans-serif;}
+.anns{margin-top:14px;display:flex;flex-direction:column;gap:6px;}
+.ann{display:flex;align-items:flex-start;gap:7px;padding:8px 11px;border-radius:7px;font-size:12px;line-height:1.5;font-weight:500;}
+.ann-y{background:#FFFBEB;border:1.5px dashed #FCD34D;color:#78350F;}
+.ann-b{background:var(--bp);border:1.5px dashed #93C5FD;color:#1E3A8A;}
+.ann-r{background:#FEF2F2;border:1.5px dashed #FCA5A5;color:#7F1D1D;}
+.ann-g{background:#F0FDF4;border:1.5px dashed #86EFAC;color:#14532D;}
+
+/* S1 */
+.hero{padding:64px 44px 48px;text-align:center;background:linear-gradient(180deg,#fff 0%,#F8FAFC 100%);}
+.hero-eye{display:inline-flex;align-items:center;gap:6px;background:var(--bp);border:1px solid #BFDBFE;border-radius:20px;padding:5px 13px;font-size:11px;font-weight:700;color:var(--blue);margin-bottom:16px;letter-spacing:.04em;text-transform:uppercase;}
+.h1{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--dk);line-height:1.12;margin-bottom:14px;max-width:560px;margin-left:auto;margin-right:auto;}
+.h1 em{color:var(--blue);font-style:normal;}
+.hsub{font-size:15.5px;color:var(--gr);max-width:420px;margin:0 auto 28px;line-height:1.65;}
+.urow{display:flex;max-width:520px;margin:0 auto;border-radius:10px;overflow:hidden;box-shadow:0 5px 20px rgba(29,78,216,.2);border:2px solid var(--blue);}
+.uinp{flex:1;padding:14px 16px;font-size:14px;border:none;outline:none;font-family:'DM Sans',sans-serif;color:var(--dk);}
+.uinp::placeholder{color:#94A3B8;}
+.ugo{padding:14px 24px;background:var(--blue);color:#fff;border:none;font-size:13.5px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;}
+.unote{font-size:11px;color:#94A3B8;margin-top:7px;}
+.sstrip{display:flex;justify-content:center;gap:36px;margin-top:36px;padding-top:28px;border-top:1px solid var(--bd);}
+.snum{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--dk);}
+.slbl{font-size:12px;color:var(--gr);margin-top:2px;}
+
+/* S2 */
+.sp{padding:32px 40px;}
+.stop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--bd);}
+.bn{font-family:'Syne',sans-serif;font-size:68px;font-weight:800;color:var(--rd);line-height:1;text-align:right;}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+.sc{border:1px solid var(--bd);border-radius:10px;padding:14px;background:#fff;}
+.sct{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;}
+.scn{font-size:13px;font-weight:600;color:var(--dk);}
+.grade{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.gA{background:#DCFCE7;color:var(--gn)}.gB{background:#FEF9C3;color:#CA8A04}.gC{background:#FEF3C7;color:var(--am)}.gD{background:#FEE2E2;color:var(--rd)}.gF{background:#fee2e2;color:#991b1b}
+.sbg{height:6px;background:var(--lt);border-radius:3px;overflow:hidden;margin-bottom:7px;}
+.sbar{height:100%;border-radius:3px;}
+.sdiag{font-size:11px;color:var(--gr);line-height:1.5;}
+.tsec{background:var(--bp);border:1.5px dashed #93C5FD;border-radius:10px;padding:18px;margin-bottom:20px;}
+.ttl{font-size:13px;font-weight:700;color:var(--blue);margin-bottom:12px;}
+.ti{display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid #BFDBFE;font-size:13px;color:var(--md);}
+.ti:last-child{border-bottom:none;}
+.tnum{width:21px;height:21px;border-radius:5px;background:var(--blue);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.blur{filter:blur(5px);user-select:none;pointer-events:none;background:var(--lt);border-radius:8px;height:32px;margin-top:8px;opacity:.7;}
+.egate{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:18px;text-align:center;}
+.egtl{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--dk);margin-bottom:5px;}
+.egsb{font-size:13px;color:var(--gr);margin-bottom:12px;}
+.egr{display:flex;gap:7px;}
+.egi{flex:1;padding:10px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;}
+.egb{padding:10px 16px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;}
+
+/* S3 */
+.cop{padding:36px 44px;display:grid;grid-template-columns:1fr 360px;gap:44px;align-items:start;}
+.cotl{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--dk);margin-bottom:5px;}
+.cosb{font-size:13.5px;color:var(--gr);margin-bottom:24px;line-height:1.6;}
+.cofl{margin-bottom:14px;}
+.colb{font-size:12px;font-weight:600;color:var(--md);margin-bottom:5px;display:block;}
+.coi{width:100%;padding:10px 13px;border:1.5px solid var(--bd);border-radius:8px;font-size:13.5px;font-family:'DM Sans',sans-serif;outline:none;color:var(--dk);}
+.corow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.copb{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:14.5px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:6px;}
+.cosum{background:var(--lt);border-radius:12px;padding:22px;border:1px solid var(--bd);}
+.cosit{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bd);font-size:13.5px;}
+.cosit:last-of-type{border-bottom:none;}
+.costot{display:flex;justify-content:space-between;padding:12px 0 0;font-size:17px;font-weight:700;color:var(--dk);}
+
+/* S4 */
+.dlayout{display:flex;min-height:500px;}
+.dsidebar{width:188px;flex-shrink:0;background:#F8FAFC;border-right:1px solid var(--bd);padding:18px 0;}
+.dlogo{padding:0 14px 14px;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:var(--dk);border-bottom:1px solid var(--bd);margin-bottom:10px;}
+.dlogo span{color:var(--blue);}
+.dni{display:flex;align-items:center;gap:7px;padding:8px 14px;font-size:12.5px;color:var(--gr);cursor:pointer;transition:.15s;}
+.dni:hover{background:var(--lt);color:var(--dk);}
+.dni.active{background:var(--bp);color:var(--blue);font-weight:600;border-right:2px solid var(--blue);}
+.dmain{flex:1;padding:24px;background:#fff;}
+.dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.dtl{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--dk);}
+.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.kpi{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:14px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kb::before{background:var(--blue)}.kg::before{background:var(--gn)}.ka::before{background:var(--am)}.kr::before{background:var(--rd)}
+.klbl{font-size:11px;font-weight:600;color:var(--gr);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.kval{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--dk);}
+.kdelta{font-size:11.5px;margin-top:3px;}
+.du{color:var(--gn)}.dd{color:var(--rd)}
+.crow{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:14px;}
+.ccard{border:1px solid var(--bd);border-radius:10px;padding:16px;}
+.ctl{font-size:13px;font-weight:600;color:var(--dk);margin-bottom:12px;}
+.carea{height:130px;background:var(--lt);border-radius:8px;display:flex;align-items:flex-end;gap:5px;padding:10px 10px 0;}
+.cbar{flex:1;border-radius:3px 3px 0 0;background:var(--blue);opacity:.85;min-height:4px;}
+.cbar:nth-child(odd){opacity:.5;}
+.pie{height:110px;width:110px;border-radius:50%;background:conic-gradient(var(--blue) 0% 28%,var(--bl) 28% 55%,var(--lt) 55% 100%);margin:0 auto;position:relative;}
+.pie::after{content:'28%';position:absolute;inset:26px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--dk);}
+.qtbl{border:1px solid var(--bd);border-radius:10px;overflow:hidden;}
+.qth{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:var(--lt);padding:9px 14px;font-size:11px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.05em;}
+.qtr{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:10px 14px;border-top:1px solid var(--bd);font-size:12.5px;align-items:center;}
+.cy{color:var(--gn);font-weight:600;font-size:12px;}.cn{color:var(--rd);font-weight:600;font-size:12px;}
+
+/* S5 */
+.cp{padding:52px 44px;text-align:center;background:#fff;}
+.cico{font-size:44px;margin-bottom:14px;}
+.ch{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--dk);margin-bottom:7px;}
+.csb{font-size:14.5px;color:var(--gr);margin-bottom:28px;line-height:1.65;max-width:400px;margin-left:auto;margin-right:auto;}
+.cbox{background:var(--lt);border-radius:12px;padding:22px;max-width:460px;margin:0 auto 24px;text-align:left;}
+.cbtl{font-size:11.5px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.06em;margin-bottom:13px;}
+.cbst{display:flex;gap:11px;padding:9px 0;border-bottom:1px solid var(--bd);font-size:13px;align-items:flex-start;}
+.cbst:last-child{border-bottom:none;}
+.cbnum{width:24px;height:24px;border-radius:5px;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.cbbtn{display:inline-flex;align-items:center;gap:7px;padding:12px 22px;background:var(--dk);color:#fff;border:none;border-radius:9px;font-size:13.5px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">AEO<span>Spark</span></div>
+  <button class="nb active" onclick="show('s1',this)">① Home</button>
+  <button class="nb" onclick="show('s2',this)">② Score Results</button>
+  <button class="nb" onclick="show('s3',this)">③ Checkout</button>
+  <button class="nb" onclick="show('s4',this)">④ Dashboard</button>
+  <button class="nb" onclick="show('s5',this)">⑤ Confirmation</button>
+  <div class="ntag">Wireframes v1.0</div>
+</nav>
+<div class="canvas">
+
+<!-- S1: LANDING -->
+<div id="s1" class="scr active">
+<div class="wrap">
+  <div class="slabel">Screen 1 of 5</div>
+  <div class="stitle">Homepage + AEO Score Widget</div>
+  <div class="sdesc">Main landing page. Single CTA: enter URL and check score. No signup. No account. User enters any company URL → navigates to /score?url= page.</div>
+  <div class="browser">
+    <div class="bbar"><div class="bdots"><div class="bd" style="background:#FF5F57"></div><div class="bd" style="background:#FEBC2E"></div><div class="bd" style="background:#28C840"></div></div><div class="burl">aeospark.com</div></div>
+    <!-- topnav -->
+    <div style="display:flex;align-items:center;padding:13px 36px;border-bottom:1px solid var(--bd);background:#fff;">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:var(--dk);">AEO<span style="color:var(--blue)">Spark</span></div>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <div style="padding:7px 14px;font-size:12.5px;color:var(--gr);">Pricing</div>
+        <div style="padding:7px 14px;font-size:12.5px;color:var(--gr);">Case Studies</div>
+        <div style="padding:7px 14px;background:var(--blue);color:#fff;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer;">Get Full Audit →</div>
+      </div>
+    </div>
+    <div class="hero">
+      <div class="hero-eye">🤖 Free AI Visibility Check</div>
+      <div class="h1">Is your company <em>invisible</em> to ChatGPT, Claude & Gemini?</div>
+      <div class="hsub">Enter your URL to get your free AEO Score in 60 seconds. No sign-up required.</div>
+      <div class="urow">
+        <input class="uinp" placeholder="https://yourcompany.com" readonly>
+        <button class="ugo">Check My Score →</button>
+      </div>
+      <div class="unote">Free forever · No account needed · Results in 60 seconds</div>
+      <div class="sstrip">
+        <div><div class="snum">5,000+</div><div class="slbl">Companies Scored</div></div>
+        <div><div class="snum">31/100</div><div class="slbl">Average AEO Score</div></div>
+        <div><div class="snum">84%</div><div class="slbl">Invisible to AI Agents</div></div>
+        <div><div class="snum">4×</div><div class="slbl">Avg Citation Improvement</div></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--bd);">
+      <div style="padding:24px 28px;border-right:1px solid var(--bd);">
+        <div style="font-size:20px;margin-bottom:7px;">🔍</div>
+        <div style="font-size:13.5px;font-weight:700;color:var(--dk);margin-bottom:3px;">1. Enter your URL</div>
+        <div style="font-size:12.5px;color:var(--gr);">We crawl your site and run real AI queries.</div>
+      </div>
+      <div style="padding:24px 28px;border-right:1px solid var(--bd);">
+        <div style="font-size:20px;margin-bottom:7px;">📊</div>
+        <div style="font-size:13.5px;font-weight:700;color:var(--dk);margin-bottom:3px;">2. Get your AEO Score</div>
+        <div style="font-size:12.5px;color:var(--gr);">See exactly where AI agents can't find you.</div>
+      </div>
+      <div style="padding:24px 28px;">
+        <div style="font-size:20px;margin-bottom:7px;">🚀</div>
+        <div style="font-size:13.5px;font-weight:700;color:var(--dk);margin-bottom:3px;">3. We fix it for you</div>
+        <div style="font-size:12.5px;color:var(--gr);">Full audit + done-for-you implementation.</div>
+      </div>
+    </div>
+  </div>
+  <div class="anns">
+    <div class="ann ann-b">ℹ️ <strong>URL VALIDATION:</strong> On submit only. If not a valid URL show inline red error below input: "Please enter a valid URL (e.g. https://yourcompany.com)". Don't block paste. Accept URLs with or without https://.</div>
+    <div class="ann ann-y">⚡ <strong>ON SUBMIT:</strong> Immediately navigate to /score?url=[encoded-url]. Show loading screen there — don't wait on homepage. Start crawl job as background process the moment URL is submitted.</div>
+    <div class="ann ann-g">✅ <strong>STATS:</strong> Hardcoded in v1. No API call. Update manually once a week. Format: "5,000+" not "5000".</div>
+    <div class="ann ann-r">🚫 <strong>DO NOT ADD:</strong> Login, signup, newsletter subscription, cookie banner (add later), chatbot widget, or any second CTA in the hero. One action only.</div>
+  </div>
+</div>
+</div>
+
+<!-- S2: SCORE RESULTS -->
+<div id="s2" class="scr">
+<div class="wrap">
+  <div class="slabel">Screen 2 of 5</div>
+  <div class="stitle">AEO Score Results Page</div>
+  <div class="sdesc">URL: /score?url=acmecorp.com — Shown after crawl completes. Low score creates urgency. First 3 recs visible, rest blurred behind email gate. Share card generated on click.</div>
+  <div class="browser">
+    <div class="bbar"><div class="bdots"><div class="bd" style="background:#FF5F57"></div><div class="bd" style="background:#FEBC2E"></div><div class="bd" style="background:#28C840"></div></div><div class="burl">aeospark.com/score?url=acmecorp.com</div></div>
+    <div class="sp">
+      <div class="stop">
+        <div>
+          <div style="font-size:12.5px;color:var(--gr);margin-bottom:3px;">acmecorp.com · Scored 2 minutes ago</div>
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--dk);">AEO Score Results for Acme Corp</div>
+          <div style="margin-top:7px;font-size:13px;color:var(--rd);font-weight:600;">⚠️ Your company is largely invisible to AI agents</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="bn">31</div>
+          <div style="font-size:12px;color:var(--gr);margin-top:2px;">out of 100</div>
+          <div style="font-size:12px;color:var(--rd);font-weight:600;margin-top:3px;">Grade F — Critical</div>
+        </div>
+      </div>
+      <div class="sg">
+        <div class="sc"><div class="sct"><div class="scn">Structured Data</div><div class="grade gF">F</div></div><div class="sbg"><div class="sbar" style="width:12%;background:var(--rd)"></div></div><div class="sdiag">No JSON-LD schema found. AI agents have no structured way to identify your products, pricing, or organization.</div></div>
+        <div class="sc"><div class="sct"><div class="scn">Content Clarity</div><div class="grade gD">D</div></div><div class="sbg"><div class="sbar" style="width:28%;background:var(--rd)"></div></div><div class="sdiag">No answer-first formatting detected. AI agents struggle to extract direct answers from your content blocks.</div></div>
+        <div class="sc"><div class="sct"><div class="scn">Pricing Transparency</div><div class="grade gF">F</div></div><div class="sbg"><div class="sbar" style="width:0%;background:var(--rd)"></div></div><div class="sdiag">Pricing is hidden behind login. AI agents cannot cite your pricing when users ask about cost comparison.</div></div>
+        <div class="sc"><div class="sct"><div class="scn">FAQ Coverage</div><div class="grade gC">C</div></div><div class="sbg"><div class="sbar" style="width:42%;background:var(--am)"></div></div><div class="sdiag">3 FAQ pairs found. Top competitors average 47. AI agents prefer FAQ-dense pages for answering user questions.</div></div>
+        <div class="sc"><div class="sct"><div class="scn">Trust Signals</div><div class="grade gB">B</div></div><div class="sbg"><div class="sbar" style="width:68%;background:var(--am)"></div></div><div class="sdiag">Customer count and year found. Missing: review schema, named leadership, verifiable statistics with sources.</div></div>
+        <div class="sc"><div class="sct"><div class="scn">Citation Readiness</div><div class="grade gD">D</div></div><div class="sbg"><div class="sbar" style="width:20%;background:var(--rd)"></div></div><div class="sdiag">Found in 1 of 25 AI test queries. Your top competitor appears in 18 of the same 25 queries.</div></div>
+      </div>
+      <div class="tsec">
+        <div class="ttl">🔧 Top Fixes to Increase Your Citation Share</div>
+        <div class="ti"><div class="tnum">1</div><div>Add <strong>FAQPage JSON-LD schema</strong> to homepage and product pages. Highest single-impact change — AI agents pull FAQ content directly into their answers.</div></div>
+        <div class="ti"><div class="tnum">2</div><div>Restructure your <strong>pricing page</strong> with explicit price points visible without login. Hidden pricing causes agents to recommend competitors who show pricing openly.</div></div>
+        <div class="ti"><div class="tnum">3</div><div>Rewrite product descriptions using <strong>answer-first formatting</strong>: lead with a 40–60 word direct answer before supporting detail.</div></div>
+        <div class="blur"></div>
+        <div class="blur" style="margin-top:6px;width:75%"></div>
+        <div style="text-align:center;font-size:12px;color:var(--gr);margin-top:9px;">+ 7 more recommendations in your full report</div>
+      </div>
+      <div class="egate">
+        <div class="egtl">Get your full 10-recommendation report — free</div>
+        <div class="egsb">Enter your work email to receive the complete analysis + 3-page PDF summary.</div>
+        <div class="egr"><input class="egi" placeholder="you@company.com" readonly><button class="egb">Send My Report →</button></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 14px;background:var(--dk);color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">📤 Share Score on LinkedIn</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 14px;background:var(--blue);color:#fff;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">🔍 Get Full $2,500 Audit →</div>
+      </div>
+    </div>
+  </div>
+  <div class="anns">
+    <div class="ann ann-b">ℹ️ <strong>LOADING STATE:</strong> Show skeleton cards for 3–8 sec. Each of 6 cards reveals sequentially with 300ms stagger. Don't reveal the big score number until all 6 dimensions are complete. Show "Analyzing [dimension name]..." text while each runs.</div>
+    <div class="ann ann-y">⚡ <strong>CRAWL FAILURE:</strong> If site returns 403/timeout/Cloudflare block, still show a score (score the parts you could get). Show banner: "Note: We couldn't fully crawl this site — some scores are estimated." Never show an error page.</div>
+    <div class="ann ann-r">🚫 <strong>EMAIL GATE RULE:</strong> Always show first 3 recs. Gate recs 4–10. If user already submitted email for this domain (check localStorage key "aeospark_email_[domain]"), skip gate and show all 10 automatically.</div>
+    <div class="ann ann-g">✅ <strong>SHARE CARD:</strong> On "Share on LinkedIn" click, use html2canvas to generate image: big score number, "acmecorp.com AEO Score: 31/100", "Check yours at aeospark.com". Then open window.open('https://www.linkedin.com/shareArticle?...').</div>
+    <div class="ann ann-b">ℹ️ <strong>COMPETITOR COMPARE (Week 2):</strong> Below the results, add a second input: "Compare vs competitor URL". Show both scores side by side. This is the most viral feature — build it in week 2, not week 1.</div>
+  </div>
+</div>
+</div>
+
+<!-- S3: CHECKOUT -->
+<div id="s3" class="scr">
+<div class="wrap">
+  <div class="slabel">Screen 3 of 5</div>
+  <div class="stitle">Checkout — Full Audit ($2,500)</div>
+  <div class="sdesc">URL: /checkout/audit — Stripe payment form. Two columns: form left, summary right. No account creation required before payment. Use Stripe Payment Element.</div>
+  <div class="browser">
+    <div class="bbar"><div class="bdots"><div class="bd" style="background:#FF5F57"></div><div class="bd" style="background:#FEBC2E"></div><div class="bd" style="background:#28C840"></div></div><div class="burl">aeospark.com/checkout/audit</div></div>
+    <div style="padding:16px 36px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:9px;">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--dk);">AEO<span style="color:var(--blue)">Spark</span></div>
+      <div style="font-size:12px;color:var(--gr);">· Secure Checkout</div>
+      <div style="margin-left:auto;font-size:11.5px;color:var(--gr);">🔒 256-bit SSL · Powered by Stripe</div>
+    </div>
+    <div class="cop">
+      <div>
+        <div class="cotl">Complete your AEO Audit</div>
+        <div class="cosb">Your 20-page audit report will be delivered within 24 hours of payment.</div>
+        <div class="cofl"><label class="colb">Full Name</label><input class="coi" placeholder="Sarah Johnson" readonly></div>
+        <div class="cofl"><label class="colb">Work Email</label><input class="coi" placeholder="sarah@company.com" readonly></div>
+        <div class="cofl"><label class="colb">Website to Audit</label><input class="coi" placeholder="https://yourcompany.com" readonly></div>
+        <div class="cofl"><label class="colb">Card Number</label><div style="border:1.5px solid var(--bd);border-radius:8px;padding:10px 13px;font-size:13px;color:#94A3B8;background:#F8FAFC;">•••• •••• •••• ····  [Stripe Payment Element]</div></div>
+        <div class="corow">
+          <div class="cofl" style="margin-bottom:0"><label class="colb">Expiry</label><div style="border:1.5px solid var(--bd);border-radius:8px;padding:10px 13px;font-size:13px;color:#94A3B8;background:#F8FAFC;">MM / YY</div></div>
+          <div class="cofl" style="margin-bottom:0"><label class="colb">CVC</label><div style="border:1.5px solid var(--bd);border-radius:8px;padding:10px 13px;font-size:13px;color:#94A3B8;background:#F8FAFC;">···</div></div>
+        </div>
+        <button class="copb" style="margin-top:18px;">Pay $2,500 — Get My Audit</button>
+        <div style="display:flex;align-items:center;justify-content:center;gap:5px;margin-top:8px;font-size:11.5px;color:var(--gr);">🔒 Secured by Stripe · SSL Encrypted · Instant receipt</div>
+      </div>
+      <div>
+        <div class="cosum">
+          <div style="font-size:11px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">Order Summary</div>
+          <div class="cosit"><span style="color:var(--md);">Full AEO Audit</span><span style="font-weight:600;">$2,500</span></div>
+          <div class="cosit"><span style="color:var(--md);">Delivery</span><span style="font-weight:600;color:var(--gn);">Within 24hrs</span></div>
+          <div class="cosit"><span style="color:var(--md);">Tax</span><span style="font-weight:600;">$0</span></div>
+          <div class="costot"><span>Total</span><span>$2,500</span></div>
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--bd);">
+            <div style="font-size:11px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:.06em;margin-bottom:9px;">What's Included</div>
+            <div style="font-size:12.5px;color:var(--md);line-height:2;">✓ 20-page PDF audit report<br>✓ Citation baseline (4 AI platforms)<br>✓ Top 3 competitor comparison<br>✓ Priority fix list (ranked by impact)<br>✓ 90-day implementation roadmap<br>✓ 30-min strategy call (Calendly)</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;background:#F0FDF4;border:1px solid #86EFAC;border-radius:10px;padding:13px;font-size:12.5px;color:#14532D;">
+          💬 <strong>Not satisfied?</strong> If your audit doesn't reveal at least 10 actionable improvements, we'll refund in full. No questions asked.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="anns">
+    <div class="ann ann-b">ℹ️ <strong>STRIPE SETUP:</strong> Use Stripe Payment Element (not CardElement). It handles card, Apple Pay, Google Pay automatically. Product ID in Stripe: "aeo_full_audit". Price: $2500 one-time. Use Stripe Checkout session mode for simplicity in v1.</div>
+    <div class="ann ann-y">⚡ <strong>WEBHOOK:</strong> On payment_intent.succeeded webhook → (1) Send confirmation email via Resend, (2) Insert row in Supabase "orders" table with {email, url, stripe_payment_id, status:"pending"}, (3) Trigger Inngest "audit.requested" event. Redirect client to /confirmation?order=[payment_intent_id].</div>
+    <div class="ann ann-r">🚫 <strong>NEVER:</strong> Store card details yourself. 100% of payment data handled by Stripe. Your server only sees the payment_intent ID after success.</div>
+    <div class="ann ann-g">✅ <strong>PRE-FILL:</strong> If user came from /score page, pre-fill the website URL and email fields using URL params. Example: /checkout/audit?url=acmecorp.com&email=sarah@acme.com. Reduces friction and abandonment.</div>
+  </div>
+</div>
+</div>
+
+<!-- S4: DASHBOARD -->
+<div id="s4" class="scr">
+<div class="wrap">
+  <div class="slabel">Screen 4 of 5</div>
+  <div class="stitle">Client Dashboard — Citation Monitor</div>
+  <div class="sdesc">URL: app.aeospark.com/dashboard — Only accessible after Monitor subscription. Auth via Supabase magic link. Shows Citation Share, query results, trends, competitor tracking.</div>
+  <div class="browser">
+    <div class="bbar"><div class="bdots"><div class="bd" style="background:#FF5F57"></div><div class="bd" style="background:#FEBC2E"></div><div class="bd" style="background:#28C840"></div></div><div class="burl">app.aeospark.com/dashboard</div></div>
+    <div class="dlayout">
+      <div class="dsidebar">
+        <div class="dlogo">AEO<span>Spark</span></div>
+        <div class="dni active">📊 Overview</div>
+        <div class="dni">🔍 Query Results</div>
+        <div class="dni">🏆 Competitors</div>
+        <div class="dni">📈 Trends</div>
+        <div class="dni">⚙️ Settings / API Keys</div>
+        <div class="dni" style="margin-top:16px;padding-top:10px;border-top:1px solid var(--bd);">💬 Talk to Team</div>
+      </div>
+      <div class="dmain">
+        <div class="dh">
+          <div>
+            <div class="dtl">Citation Share Overview</div>
+            <div style="font-size:12px;color:var(--gr);margin-top:2px;">acmecorp.com · Last updated 2 hours ago</div>
+          </div>
+          <div style="display:flex;gap:7px;">
+            <div style="padding:6px 12px;border:1px solid var(--bd);border-radius:7px;font-size:12px;color:var(--gr);cursor:pointer;">Last 30 days ▾</div>
+            <div style="padding:6px 12px;background:var(--blue);color:#fff;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;">Run Queries Now</div>
+          </div>
+        </div>
+        <div class="krow">
+          <div class="kpi kb"><div class="klbl">Citation Share</div><div class="kval">28%</div><div class="kdelta du">↑ +19% from baseline</div></div>
+          <div class="kpi kg"><div class="klbl">Queries Cited In</div><div class="kval">14/50</div><div class="kdelta du">↑ +11 since Month 1</div></div>
+          <div class="kpi ka"><div class="klbl">Competitor Gap</div><div class="kval">−18%</div><div class="kdelta" style="color:var(--am)">Best competitor: 46%</div></div>
+          <div class="kpi kr"><div class="klbl">AEO Score</div><div class="kval">67</div><div class="kdelta du">↑ +36 from 31</div></div>
+        </div>
+        <div class="crow">
+          <div class="ccard">
+            <div class="ctl">Citation Share Over Time</div>
+            <div class="carea">
+              <div class="cbar" style="height:18%"></div><div class="cbar" style="height:22%"></div><div class="cbar" style="height:24%"></div><div class="cbar" style="height:30%"></div><div class="cbar" style="height:33%"></div><div class="cbar" style="height:37%"></div><div class="cbar" style="height:42%"></div><div class="cbar" style="height:47%"></div><div class="cbar" style="height:52%"></div><div class="cbar" style="height:60%"></div><div class="cbar" style="height:66%"></div><div class="cbar" style="height:70%;opacity:1;background:#60A5FA"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 10px 0;font-size:10.5px;color:var(--gr);"><span>Wk 1</span><span>Wk 4</span><span>Wk 8</span><span>Wk 12</span></div>
+          </div>
+          <div class="ccard">
+            <div class="ctl">By Platform</div>
+            <div class="pie"></div>
+            <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;justify-content:center;">
+              <div style="display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--md);"><div style="width:9px;height:9px;border-radius:2px;background:var(--blue)"></div>ChatGPT 28%</div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--md);"><div style="width:9px;height:9px;border-radius:2px;background:var(--bl)"></div>Claude 27%</div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--md);"><div style="width:9px;height:9px;border-radius:2px;background:var(--lt)"></div>Gemini 0%</div>
+            </div>
+          </div>
+        </div>
+        <div class="qtbl">
+          <div class="qth"><div>Query (sample)</div><div>ChatGPT</div><div>Claude</div><div>Sentiment</div></div>
+          <div class="qtr"><div style="font-size:12px;color:var(--dk)">"Best CRM for 10-person SaaS team"</div><div><span class="cy">✓ Cited</span></div><div><span class="cy">✓ Cited</span></div><div style="font-size:12px;font-weight:600;color:var(--gn)">Positive</div></div>
+          <div class="qtr" style="background:#FEF2F2"><div style="font-size:12px;color:var(--dk)">"CRM with Slack integration under $50/mo"</div><div><span class="cn">✗ Missing</span></div><div><span class="cn">✗ Missing</span></div><div style="font-size:12px;color:var(--gr)">—</div></div>
+          <div class="qtr"><div style="font-size:12px;color:var(--dk)">"Affordable CRM for startups 2026"</div><div><span class="cy">✓ Cited</span></div><div><span class="cn">✗ Missing</span></div><div style="font-size:12px;font-weight:600;color:var(--gn)">Positive</div></div>
+          <div class="qtr" style="background:#FEF2F2"><div style="font-size:12px;color:var(--dk)">"CRM with free trial and pipeline view"</div><div><span class="cn">✗ Missing</span></div><div><span class="cn">✗ Missing</span></div><div style="font-size:12px;color:var(--gr)">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="anns">
+    <div class="ann ann-r">🚫 <strong>BUILD ORDER:</strong> Do NOT build this screen until you have 5 retainer clients. This is Phase 2 (Month 4+). The only thing driving you to build this is your own pain of manually reporting to retainer clients.</div>
+    <div class="ann ann-b">ℹ️ <strong>AUTH:</strong> Supabase Auth with magic link email. No password. No social login in v1. After purchase, trigger a magic link email to client. Session cookie expires in 30 days.</div>
+    <div class="ann ann-y">⚡ <strong>BYOK — CRITICAL:</strong> Settings screen (not shown here) must have fields for client to enter their own Anthropic API key and OpenAI API key. Store encrypted in Supabase Vault. All citation tracking jobs for that client use their keys. This is your ToS compliance strategy.</div>
+    <div class="ann ann-g">✅ <strong>DAILY JOB:</strong> Inngest scheduled function runs at 3am UTC daily. For each active Monitor client: (1) fetch their query library, (2) call their stored API keys against Anthropic + OpenAI, (3) parse responses for brand mentions, (4) update citation_results table, (5) recalculate citation_share metric.</div>
+  </div>
+</div>
+</div>
+
+<!-- S5: CONFIRMATION -->
+<div id="s5" class="scr">
+<div class="wrap">
+  <div class="slabel">Screen 5 of 5</div>
+  <div class="stitle">Post-Purchase Confirmation</div>
+  <div class="sdesc">URL: /confirmation?order=[stripe_payment_intent_id] — Shown immediately after Stripe payment success. Same content also sent as confirmation email via Resend.</div>
+  <div class="browser">
+    <div class="bbar"><div class="bdots"><div class="bd" style="background:#FF5F57"></div><div class="bd" style="background:#FEBC2E"></div><div class="bd" style="background:#28C840"></div></div><div class="burl">aeospark.com/confirmation?order=pi_3abc123</div></div>
+    <div class="cp">
+      <div class="cico">🎉</div>
+      <div class="ch">You're all set, Sarah!</div>
+      <div class="csb">Your full AEO Audit for <strong>acmecorp.com</strong> is being prepared. You'll receive a 20-page report at <strong>sarah@acmecorp.com</strong> within 24 hours.</div>
+      <div class="cbox">
+        <div class="cbtl">What happens next</div>
+        <div class="cbst"><div class="cbnum">1</div><div style="color:var(--md);line-height:1.5;font-size:13px;"><strong>Right now:</strong> We're running 25 AI queries across ChatGPT, Claude, Gemini, and Perplexity to establish your Citation Baseline.</div></div>
+        <div class="cbst"><div class="cbnum">2</div><div style="color:var(--md);line-height:1.5;font-size:13px;"><strong>Within 6 hours:</strong> Deep crawl of your top 50 pages and citation analysis of your top 3 competitors.</div></div>
+        <div class="cbst"><div class="cbnum">3</div><div style="color:var(--md);line-height:1.5;font-size:13px;"><strong>Within 24 hours:</strong> 20-page PDF report delivered by email with priority fixes ranked by citation impact.</div></div>
+        <div class="cbst"><div class="cbnum">4</div><div style="color:var(--md);line-height:1.5;font-size:13px;"><strong>Book your strategy call:</strong> Free 30-min walkthrough of findings. This is where we discuss your implementation options.</div></div>
+      </div>
+      <button class="cbbtn">📅 Book Your 30-Min Strategy Call</button>
+      <div style="margin-top:16px;font-size:12.5px;color:var(--gr);">Order ID: <code style="background:var(--lt);padding:2px 7px;border-radius:4px;font-size:11px;">pi_3abc123</code> · Receipt sent to sarah@acmecorp.com</div>
+    </div>
+  </div>
+  <div class="anns">
+    <div class="ann ann-b">ℹ️ <strong>CALENDLY:</strong> Button opens Calendly popup (embed the Calendly widget JS). Event type: "AEO Audit Strategy Call" — 30 min, your calendar. This call is your retainer pitch. It's the most important conversion point in the entire funnel.</div>
+    <div class="ann ann-y">⚡ <strong>EMAIL (Resend):</strong> Fire immediately on payment webhook. Subject: "Your AEO Audit is being prepared — expect it within 24 hours". Include: order ID, website being audited, Calendly link, one sentence explaining what Citation Share means.</div>
+    <div class="ann ann-g">✅ <strong>SOFT UPSELL:</strong> At bottom of page (not shown), add 1 sentence only: "Want us to implement everything in this report for you? Ask about our implementation retainer on your strategy call." No price, no link — just plant the seed.</div>
+    <div class="ann ann-r">🚫 <strong>SINGLE ACTION ONLY:</strong> The only clickable CTA on this page is "Book Strategy Call". No survey, no upsell modal, no referral ask. Keep it clean. The customer just paid $2,500 — don't make them do more work.</div>
+  </div>
+</div>
+</div>
+
+</div>
+<script>
+function show(id,btn){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

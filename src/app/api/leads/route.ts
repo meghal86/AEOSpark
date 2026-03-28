@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { captureLead } from "@/lib/storage";
+import { sendLeadSummaryEmail } from "@/lib/email";
+import { captureLead, getScoreById } from "@/lib/storage";
 
 export async function POST(request: Request) {
   try {
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
       );
     }
 
-    await captureLead({
+    const lead = await captureLead({
       email: body.email,
       name: body.name,
       score: body.score ?? 0,
@@ -27,7 +28,16 @@ export async function POST(request: Request) {
       website: body.website,
     });
 
-    return NextResponse.json({ ok: true });
+    const score = body.scoreId ? await getScoreById(body.scoreId) : undefined;
+    if (score) {
+      await sendLeadSummaryEmail({
+        email: body.email,
+        name: body.name,
+        score,
+      });
+    }
+
+    return NextResponse.json({ leadId: lead.id, ok: true });
   } catch (error) {
     return NextResponse.json(
       {

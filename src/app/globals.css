@@ -1,15 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #07101d;
-  --foreground: #f8fbff;
+  --background: #f4efe6;
+  --foreground: #201915;
+  --accent: #7c5544;
+  --accent-soft: #b18b76;
+  --border-soft: rgba(53, 38, 30, 0.1);
+  --panel-top: rgba(255, 252, 247, 0.92);
+  --panel-bottom: rgba(248, 241, 232, 0.88);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-dm-sans);
-  --font-display: var(--font-syne);
+  --font-display: var(--font-cormorant);
 }
 
 * {
@@ -18,20 +23,52 @@
 
 html {
   scroll-behavior: smooth;
+  color-scheme: only light;
+  background: #f8f4ed;
+  forced-color-adjust: none;
 }
 
 body {
   min-height: 100vh;
+  background-color: #f8f4ed;
   background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 22%),
-    radial-gradient(circle at 85% 0%, rgba(52, 211, 153, 0.08), transparent 18%),
-    linear-gradient(180deg, #08111f 0%, #07101d 40%, #050d17 100%);
+    radial-gradient(circle at top left, rgba(169, 129, 92, 0.14), transparent 24%),
+    radial-gradient(circle at 100% 0%, rgba(114, 134, 100, 0.12), transparent 20%),
+    linear-gradient(180deg, #f8f4ed 0%, #f3ede3 40%, #eee6da 100%);
   color: var(--foreground);
   font-family: var(--font-dm-sans), sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  forced-color-adjust: none;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.45;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent 35%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.2), transparent 32%);
+  mask-image: radial-gradient(circle at center, black 28%, transparent 86%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  top: -10rem;
+  right: -7rem;
+  width: 30rem;
+  height: 30rem;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(168, 124, 92, 0.15), transparent 70%);
+  filter: blur(28px);
 }
 
 ::placeholder {
-  color: rgba(226, 232, 240, 0.72);
+  color: rgba(69, 52, 42, 0.52);
 }
 
 button,
@@ -46,10 +83,96 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-syne), sans-serif;
+  font-family: var(--font-cormorant), sans-serif;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+.surface-panel {
+  background:
+    linear-gradient(180deg, var(--panel-top), var(--panel-bottom)),
+    radial-gradient(circle at top left, rgba(168, 124, 92, 0.09), transparent 34%);
+  border: 1px solid var(--border-soft);
+  box-shadow:
+    0 24px 80px rgba(70, 48, 33, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(18px);
+}
+
+.surface-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(246, 238, 228, 0.94));
+  border: 1px solid rgba(59, 42, 33, 0.09);
+  box-shadow: 0 18px 44px rgba(70, 48, 33, 0.07);
+}
+
+.ui-kicker {
+  color: var(--accent);
+}
+
+.ui-chip {
+  border: 1px solid rgba(83, 61, 47, 0.12);
+  background: rgba(255, 252, 247, 0.74);
+  color: rgba(40, 30, 24, 0.86);
+}
+
+.btn-primary {
+  background: #241a16;
+  color: #f7f1e8;
+  box-shadow: 0 16px 34px rgba(36, 26, 22, 0.16);
+}
+
+.btn-primary:hover {
+  background: #342520;
+}
+
+.btn-secondary {
+  border: 1px solid rgba(72, 52, 40, 0.14);
+  background: rgba(255, 252, 247, 0.82);
+  color: #2c211b;
+}
+
+.btn-secondary:hover {
+  background: rgba(247, 238, 227, 0.98);
+}
+
+.input-field {
+  border: 1px solid rgba(78, 58, 46, 0.12);
+  background: rgba(255, 253, 249, 0.92);
+  color: #241b17;
+}
+
+.input-field:focus {
+  border-color: rgba(124, 85, 68, 0.55);
+  box-shadow: 0 0 0 3px rgba(177, 139, 118, 0.16);
+  outline: none;
+}
+
+.status-success {
+  color: #38614a;
+}
+
+.status-warning {
+  color: #9a682a;
+}
+
+.status-danger {
+  color: #8b4037;
+}
+
+.app-fade-up {
+  animation: app-fade-up 0.55s ease-out both;
+}
+
+@keyframes app-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

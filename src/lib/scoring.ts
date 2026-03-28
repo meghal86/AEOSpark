@@ -1,503 +1,970 @@
 import { load } from "cheerio";
 
 import type {
-  ComparisonScore,
   Recommendation,
   ScoreDimension,
   ScoreDimensionKey,
   ScoreRecord,
 } from "@/lib/types";
+import { slugify } from "@/lib/utils";
 
-type RawPage = {
+export type CrawlPage = {
   html: string;
   url: string;
-  crawlStatus: "live" | "fallback";
-  crawlNotes: string[];
 };
 
-const DIMENSION_WEIGHTS: Record<ScoreDimensionKey, number> = {
-  "structured-data": 25,
-  "content-clarity": 20,
-  "pricing-transparency": 20,
-  "faq-coverage": 20,
-  "trust-signals": 10,
-  "citation-readiness": 5,
+export type CrawlResult = {
+  html: string;
+  url: string;
+  domain: string;
+  robotsTxt: string;
+  hasLlmsTxt: boolean;
+  pages: CrawlPage[];
+  crawl_status: "success" | "partial" | "blocked";
 };
 
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value));
+export type ScoreResult = {
+  total: number;
+  grade: string;
+  dimensions: {
+    crawler_access: number;
+    structured_data: number;
+    content_arch: number;
+    pricing: number;
+    authority: number;
+    bing_presence: number;
+    brand_footprint: number;
+  };
+  diagnoses: Record<string, string>;
+  crawl_status: "success" | "partial" | "blocked";
+};
+
+type StructuredDataStats = {
+  otherTypes: string[];
+  organizationFound: boolean;
+  faqFound: boolean;
+  productFound: boolean;
+  softwareApplicationFound: boolean;
+  microdataFound: boolean;
+  score: number;
+  pageCount: number;
+  discoveredTypes: string[];
+};
+
+const USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36";
+
+const DIMENSION_META: Record<
+  keyof ScoreResult["dimensions"],
+  { key: ScoreDimensionKey; label: string; weight: number }
+> = {
+  crawler_access: {
+    key: "crawler-access",
+    label: "AI Crawler Access",
+    weight: 15,
+  },
+  structured_data: {
+    key: "structured-data",
+    label: "Structured Data",
+    weight: 20,
+  },
+  content_arch: {
+    key: "content-architecture",
+    label: "Content Architecture",
+    weight: 20,
+  },
+  pricing: {
+    key: "pricing-visibility",
+    label: "Pricing Visibility",
+    weight: 15,
+  },
+  authority: {
+    key: "authority-signals",
+    label: "Authority Signals",
+    weight: 15,
+  },
+  bing_presence: {
+    key: "bing-presence",
+    label: "Bing Presence",
+    weight: 10,
+  },
+  brand_footprint: {
+    key: "brand-footprint",
+    label: "Brand Footprint",
+    weight: 5,
+  },
+};
+
+function domainFromUrl(url: string) {
+  return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
 }
 
-function normalizeUrl(input: string) {
-  const trimmed = input.trim();
-  const withProtocol =
-    trimmed.startsWith("http://") || trimmed.startsWith("https://")
-      ? trimmed
-      : `https://${trimmed}`;
-
-  return new URL(withProtocol).toString();
+function companyNameFromDomain(domain: string) {
+  return domain
+    .split(".")[0]
+    ?.split(/[-_]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
-async function fetchWebsiteHtml(input: string): Promise<RawPage> {
-  const crawlNotes: string[] = [];
-  const url = normalizeUrl(input);
+function normalizeWhitespace(value: string) {
+  return value.replace(/\s+/g, " ").trim();
+}
 
-  try {
-    const response = await fetch(url, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(15_000),
-      headers: {
-        "user-agent":
-          "Mozilla/5.0 (compatible; AEOSparkBot/1.0; +https://aeospark.com)",
-        accept: "text/html,application/xhtml+xml",
-      },
-    });
+function getGrade(total: number) {
+  if (total >= 90) return "A";
+  if (total >= 75) return "B";
+  if (total >= 60) return "C";
+  if (total >= 45) return "D";
+  return "F";
+}
 
-    if (!response.ok) {
-      throw new Error(`Remote site responded with ${response.status}.`);
+function safeText($: ReturnType<typeof load>) {
+  return normalizeWhitespace($.root().text());
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function parseJsonLdTypes(input: unknown): string[] {
+  if (!input) return [];
+  if (Array.isArray(input)) {
+    return input.flatMap(parseJsonLdTypes);
+  }
+  if (typeof input !== "object") {
+    return [];
+  }
+
+  const record = input as Record<string, unknown>;
+  const ownType = record["@type"];
+  const graph = record["@graph"];
+  const nested = Object.values(record).flatMap((value) =>
+    typeof value === "object" ? parseJsonLdTypes(value) : [],
+  );
+
+  const ownTypes =
+    typeof ownType === "string"
+      ? [ownType]
+      : Array.isArray(ownType)
+        ? ownType.filter((value): value is string => typeof value === "string")
+        : [];
+
+  return [...ownTypes, ...parseJsonLdTypes(graph), ...nested];
+}
+
+function analyzeStructuredData(homepageHtml: string, pages: CrawlPage[]) {
+  const discoveredTypes = new Set<string>();
+  let pageCount = 0;
+  let microdataFound = false;
+
+  for (const html of [homepageHtml, ...pages.slice(0, 3).map((page) => page.html)]) {
+    const $ = load(html);
+    const scripts = $('script[type="application/ld+json"]').toArray();
+    const hasSchemaAttributes =
+      $("[itemtype*='schema.org'], [itemscope], [itemprop]").length > 0 ||
+      $("meta[property^='og:'], meta[name='application-name'], meta[name='apple-itunes-app']").length > 0;
+    if (scripts.length || hasSchemaAttributes) {
+      pageCount += 1;
+    }
+    if (hasSchemaAttributes) {
+      microdataFound = true;
     }
 
-    const html = await response.text();
-    if (!html.trim()) {
-      throw new Error("Remote site returned an empty document.");
+    for (const script of scripts) {
+      const raw = $(script).contents().text().trim();
+      if (!raw) continue;
+      try {
+        const parsed = JSON.parse(raw);
+        for (const schemaType of parseJsonLdTypes(parsed)) {
+          discoveredTypes.add(schemaType);
+        }
+      } catch {
+        continue;
+      }
     }
-
-    crawlNotes.push("Live crawl completed.");
-    return {
-      html,
-      url,
-      crawlStatus: "live",
-      crawlNotes,
-    };
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown crawl failure.";
-    const hostname = new URL(url).hostname.replace(/^www\./, "");
-
-    crawlNotes.push(`Live crawl unavailable: ${message}`);
-    crawlNotes.push(
-      "Fallback heuristic used. Scores are directional until a live crawl succeeds.",
-    );
-
-    return {
-      url,
-      crawlStatus: "fallback",
-      crawlNotes,
-      html: `
-        <html>
-          <body>
-            <main>
-              <h1>${hostname}</h1>
-              <section>
-                <h2>Pricing</h2>
-                <p>Talk to sales for custom pricing.</p>
-              </section>
-              <section>
-                <h2>Frequently asked questions</h2>
-                <h3>What does ${hostname} do?</h3>
-                <p>${hostname} helps teams improve performance.</p>
-                <h3>How quickly can customers launch?</h3>
-                <p>Most customers launch in a few weeks.</p>
-              </section>
-              <section>
-                <h2>Trusted by teams</h2>
-                <p>Customer stories, reviews, and leadership bios available upon request.</p>
-              </section>
-            </main>
-          </body>
-        </html>
-      `,
-    };
-  }
-}
-
-function detectCompanyName($: ReturnType<typeof load>, url: string) {
-  const title = $("title").first().text().trim();
-  const h1 = $("h1").first().text().trim();
-  const hostname = new URL(url).hostname.replace(/^www\./, "");
-
-  const raw = title || h1 || hostname;
-  return raw.split(/[|\-–:]/)[0]?.trim() || hostname;
-}
-
-function summarizeVerdict(score: number) {
-  if (score >= 75) {
-    return "This site is already readable by AI agents, but there is still room to out-position competitors on structure and proof.";
   }
 
-  if (score >= 50) {
-    return "This site has enough surface area for AI agents to parse, but important buying signals are inconsistent or buried.";
+  const types = [...discoveredTypes];
+  const faqFound = types.some((type) => /FAQPage/i.test(type));
+  const organizationFound = types.some((type) => /Organization/i.test(type));
+  const softwareApplicationFound = types.some((type) =>
+    /SoftwareApplication/i.test(type),
+  );
+  const productFound = types.some((type) => /Product/i.test(type));
+  const otherTypes = types.filter(
+    (type) =>
+      !/FAQPage/i.test(type) &&
+      !/Organization/i.test(type) &&
+      !/SoftwareApplication/i.test(type) &&
+      !/Product/i.test(type),
+  );
+
+  let score = 0;
+  if (faqFound) score += 8;
+  if (organizationFound) score += 6;
+  if (softwareApplicationFound || productFound) score += 4;
+  if (!faqFound && !organizationFound && !softwareApplicationFound && !productFound && otherTypes.length) {
+    score += 2;
+  }
+  if (score === 0 && microdataFound) {
+    score += 2;
   }
 
-  return "This site is hard for AI agents to cite reliably. Key answers, proof points, or structure are either missing or too vague.";
-}
-
-function buildDimension(
-  key: ScoreDimensionKey,
-  label: string,
-  score: number,
-  diagnosis: string,
-  evidence: string[],
-): ScoreDimension {
   return {
-    key,
-    label,
-    weight: DIMENSION_WEIGHTS[key],
-    score: clamp(score, 0, DIMENSION_WEIGHTS[key]),
-    diagnosis,
-    evidence,
+    discoveredTypes: types,
+    faqFound,
+    microdataFound,
+    organizationFound,
+    otherTypes,
+    pageCount,
+    productFound,
+    score,
+    softwareApplicationFound,
+  } satisfies StructuredDataStats;
+}
+
+function botAllowed(robotsTxt: string, bot: string) {
+  if (!robotsTxt.trim()) {
+    return true;
+  }
+
+  const lines = robotsTxt
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !line.startsWith("#"));
+
+  let currentAgents: string[] = [];
+  let matchedBlock = false;
+  let disallowAll = false;
+
+  for (const line of lines) {
+    const [rawDirective, ...rawValue] = line.split(":");
+    if (!rawDirective || rawValue.length === 0) {
+      continue;
+    }
+
+    const directive = rawDirective.trim().toLowerCase();
+    const value = rawValue.join(":").trim();
+
+    if (directive === "user-agent") {
+      const normalized = value.toLowerCase();
+      if (!currentAgents.length || matchedBlock) {
+        currentAgents = [normalized];
+      } else {
+        currentAgents.push(normalized);
+      }
+      matchedBlock = currentAgents.includes(bot.toLowerCase());
+      continue;
+    }
+
+    if (directive === "disallow" && matchedBlock) {
+      if (value === "/") {
+        disallowAll = true;
+      }
+      if (value === "") {
+        disallowAll = false;
+      }
+    }
+
+    if (directive === "allow" && matchedBlock && value === "/") {
+      disallowAll = false;
+    }
+  }
+
+  return !disallowAll;
+}
+
+function countFaqPairs(
+  homepageHtml: string,
+  pages: CrawlPage[],
+  structuredData: StructuredDataStats,
+) {
+  const pagesToInspect = [homepageHtml, ...pages.slice(0, 3).map((page) => page.html)];
+  let total = 0;
+
+  for (const html of pagesToInspect) {
+    const $ = load(html);
+    const faqBlocks = $('[class*="faq"], [class*="FAQ"]').length;
+    const detailsPairs = $("details summary").length;
+    const questionHeadings = $("h2, h3, h4")
+      .toArray()
+      .map((entry) => normalizeWhitespace($(entry).text()))
+      .filter((value) => value.endsWith("?")).length;
+
+    total += faqBlocks + detailsPairs + questionHeadings;
+  }
+
+  if (structuredData.faqFound) {
+    total += 8;
+  }
+
+  return total;
+}
+
+function answerFirstParagraphScore(
+  homepageHtml: string,
+  domain: string,
+) {
+  const $ = load(homepageHtml);
+  const firstParagraph = normalizeWhitespace($("p").first().text());
+  if (!firstParagraph) {
+    return { matched: false, paragraph: "" };
+  }
+
+  const words = firstParagraph.split(/\s+/);
+  const withinWindow = words.slice(0, 60).join(" ");
+  const hasSentence = /\./.test(withinWindow);
+  const lower = withinWindow.toLowerCase();
+  const startsBadly =
+    lower.startsWith("we are") ||
+    lower.startsWith("welcome") ||
+    lower.startsWith(domain.split(".")[0].toLowerCase());
+
+  return {
+    matched: hasSentence && !startsBadly,
+    paragraph: firstParagraph,
   };
 }
 
-function analyzeStructuredData(html: string) {
-  const schemaTypes = [
-    "Organization",
-    "Product",
-    "FAQPage",
-    "HowTo",
-    "BreadcrumbList",
+async function fetchText(url: string) {
+  const response = await fetch(url, {
+    cache: "no-store",
+    headers: {
+      "user-agent": USER_AGENT,
+      accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "accept-language": "en-US,en;q=0.9",
+      "cache-control": "no-cache",
+      pragma: "no-cache",
+    },
+    signal: AbortSignal.timeout(15_000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  return response.text();
+}
+
+function unique<T>(values: T[]) {
+  return [...new Set(values)];
+}
+
+function extractXmlLocValues(xml: string, tagName: "url" | "sitemap") {
+  const pattern = new RegExp(
+    `<${tagName}[^>]*>[\\s\\S]*?<loc>(.*?)<\\/loc>[\\s\\S]*?<\\/${tagName}>`,
+    "gi",
+  );
+
+  return unique(
+    [...xml.matchAll(pattern)]
+      .map((match) => match[1]?.trim())
+      .filter((value): value is string => Boolean(value)),
+  );
+}
+
+async function estimateIndexedPagesFromSitemaps(origin: string) {
+  const candidateSitemaps = new Set<string>([`${origin}/sitemap.xml`]);
+
+  try {
+    const robotsTxt = await fetchText(`${origin}/robots.txt`);
+    for (const line of robotsTxt.split("\n")) {
+      const match = line.match(/^Sitemap:\s*(https?:\/\/\S+)/i);
+      if (match?.[1]) {
+        candidateSitemaps.add(match[1].trim());
+      }
+    }
+  } catch {
+    // fall back to the default sitemap location
+  }
+
+  const queue = [...candidateSitemaps].slice(0, 5);
+  const visited = new Set<string>();
+  const discoveredUrls = new Set<string>();
+
+  while (queue.length && visited.size < 5 && discoveredUrls.size < 10_000) {
+    const sitemapUrl = queue.shift();
+    if (!sitemapUrl || visited.has(sitemapUrl)) continue;
+    visited.add(sitemapUrl);
+
+    try {
+      const xml = await fetchText(sitemapUrl);
+      for (const url of extractXmlLocValues(xml, "url")) {
+        discoveredUrls.add(url);
+      }
+
+      for (const nested of extractXmlLocValues(xml, "sitemap")) {
+        if (nested.startsWith(origin) && !visited.has(nested) && queue.length < 5) {
+          queue.push(nested);
+        }
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return discoveredUrls.size;
+}
+
+async function checkPricingVisibility(baseUrl: string, crawledPages: CrawlPage[]) {
+  const origin = new URL(baseUrl).origin;
+  const candidates = ["/pricing", "/plans", "/price"];
+  let accessiblePage: string | null = null;
+  let pricingText = "";
+  let blockedByContactOnly = false;
+
+  for (const path of candidates) {
+    const candidateUrl = `${origin}${path}`;
+    try {
+      const html = await fetchText(candidateUrl);
+      const $ = load(html);
+      const text = safeText($).toLowerCase();
+      const redirectedToLogin =
+        /login|sign in|sign-in/.test(text.slice(0, 300)) &&
+        !$("body").text().includes("$");
+
+      if (!redirectedToLogin) {
+        accessiblePage = candidateUrl;
+        pricingText = text;
+        blockedByContactOnly =
+          /contact us|talk to sales|request a quote/.test(text) &&
+          !/[$€£]|per month|per year/.test(text);
+        break;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  const allText = `${pricingText} ${crawledPages
+    .map((page) => normalizeWhitespace(load(page.html).root().text()).toLowerCase())
+    .join(" ")}`;
+  const hasFreeTrial =
+    /free trial|free forever|freemium/.test(pricingText) ||
+    /free trial|free forever|freemium/.test(allText);
+
+  let score = 0;
+  if (accessiblePage && !blockedByContactOnly) {
+    score += 8;
+    if (/[$€£]|per month|per year/.test(pricingText)) {
+      score += 5;
+    }
+    if (hasFreeTrial) {
+      score += 2;
+    }
+  }
+
+  return {
+    accessiblePage,
+    blockedByContactOnly,
+    hasFreeTrial,
+    pricingText,
+    score,
+  };
+}
+
+function findAuthoritySignals(homepageHtml: string, pages: CrawlPage[]) {
+  const pagesToInspect = [homepageHtml, ...pages.slice(0, 4).map((page) => page.html)];
+  const combinedHtml = pagesToInspect.join("\n");
+  const combinedText = normalizeWhitespace(load(combinedHtml).root().text());
+  const leadershipPatterns = [
+    /\b(?:ceo|founder|co-founder|cofounder|chief executive officer)\b[^A-Za-z]{0,30}([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})/i,
+    /([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})[^.]{0,40}\b(?:ceo|founder|co-founder|cofounder|chief executive officer)\b/i,
+    /\bfounded by\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})/i,
   ];
-
-  const matched = schemaTypes.filter((schemaType) =>
-    new RegExp(`"@type"\\s*:\\s*"${schemaType}"`, "i").test(html),
+  const leadershipMatch = leadershipPatterns
+    .map((pattern) => combinedText.match(pattern))
+    .find(Boolean);
+  const customerCountMatch = combinedText.match(
+    /\b(?:over\s+|more than\s+|trusted by\s+)?[\d,.]+(?:\+|k|m)?\s+(?:customers|companies|users|teams|businesses)\b/i,
+  );
+  const externalStatsMatch = combinedText.match(
+    /\b(?:according to|study shows|research finds|% of)\b.{0,120}/i,
   );
 
-  const missing = schemaTypes.filter((schemaType) => !matched.includes(schemaType));
-  const score = matched.length * 5;
-  const diagnosis =
-    matched.length >= 4
-      ? "Core schema coverage is present, so AI systems can resolve entity, product, and FAQ context."
-      : "Schema coverage is incomplete. AI systems are missing explicit machine-readable context on core pages.";
-
-  return buildDimension(
-    "structured-data",
-    "Structured Data",
-    score,
-    diagnosis,
-    [
-      matched.length
-        ? `Detected schema: ${matched.join(", ")}.`
-        : "No target JSON-LD schema detected on the crawled page.",
-      missing.length ? `Missing high-value schema: ${missing.join(", ")}.` : "No major schema gaps detected.",
-    ],
-  );
-}
-
-function analyzeContentClarity(
-  $: ReturnType<typeof load>,
-  bodyText: string,
-) {
-  const h1Count = $("h1").length;
-  const h2Count = $("h2").length;
-  const h3Count = $("h3").length;
-  const earlyCopy = bodyText.slice(0, 550).toLowerCase();
+  const $ = load(combinedHtml);
+  let reviewBadgeFound = false;
+  $("a[href], img[src]").each((_, element) => {
+    const href = $(element).attr("href") || $(element).attr("src") || "";
+    if (/g2\.com|capterra\.com|trustpilot\.com/i.test(href)) {
+      reviewBadgeFound = true;
+    }
+  });
 
   let score = 0;
-  score += h1Count === 1 ? 6 : h1Count > 1 ? 3 : 0;
-  score += h2Count >= 3 ? 6 : h2Count >= 1 ? 3 : 0;
-  score += h3Count >= 2 ? 4 : h3Count >= 1 ? 2 : 0;
-  score += /(helps|platform|software|service|for teams|for companies|compare)/.test(
-    earlyCopy,
-  )
-    ? 4
-    : 1;
+  if (leadershipMatch) score += 4;
+  if (customerCountMatch) score += 3;
+  if (reviewBadgeFound) score += 4;
+  if (externalStatsMatch) score += 4;
 
-  const diagnosis =
-    score >= 15
-      ? "The page uses a readable heading hierarchy and states the value proposition early enough for model extraction."
-      : "The page needs clearer semantic hierarchy and sharper opening copy so AI systems can extract what you do and who you serve.";
-
-  return buildDimension("content-clarity", "Content Clarity", score, diagnosis, [
-    `Heading count: ${h1Count} H1 / ${h2Count} H2 / ${h3Count} H3.`,
-    earlyCopy.length
-      ? "Opening copy was analyzed for an explicit value proposition."
-      : "Very little crawlable body copy was available.",
-  ]);
-}
-
-function analyzePricingTransparency(
-  bodyText: string,
-) {
-  const lowerBody = bodyText.toLowerCase();
-  const hasCurrency = /\$\s?\d|\bpricing\b|\bplans\b|\bper month\b/.test(lowerBody);
-  const hasComparison = /\bcompare\b|\bvs\b|\bstarter\b|\bgrowth\b|\benterprise\b/.test(
-    lowerBody,
-  );
-  const hasCTA = /\bbook demo\b|\btalk to sales\b|\bcontact sales\b/.test(lowerBody);
-
-  let score = 0;
-  score += hasCurrency ? 10 : 2;
-  score += hasComparison ? 6 : 2;
-  score += hasCTA ? 4 : 2;
-
-  const diagnosis =
-    score >= 14
-      ? "Pricing signals are discoverable. AI agents have enough information to cite cost or buying path."
-      : "Pricing is opaque or incomplete. AI agents tend to avoid citing vendors when cost and packaging are unclear.";
-
-  return buildDimension(
-    "pricing-transparency",
-    "Pricing Transparency",
+  return {
+    customerCountMatch,
+    externalStatsMatch,
+    leadershipMatch,
+    reviewBadgeFound,
     score,
-    diagnosis,
-    [
-      hasCurrency
-        ? "Pricing language or currency markers were detected."
-        : "No explicit price or plan language was detected on the page.",
-      hasComparison
-        ? "Plan or package structure appears on-page."
-        : "No clear package breakdown or plan comparison was detected.",
-    ],
-  );
+  };
 }
 
-function analyzeFaqCoverage($: ReturnType<typeof load>, html: string) {
-  const headings = $("h2, h3, summary")
+function parseBingResultCount(html: string) {
+  const text = normalizeWhitespace(load(html).root().text());
+  const match =
+    text.match(/([\d,]+)\s+results/i) ||
+    text.match(/About\s+([\d,]+)\s+results/i) ||
+    text.match(/([\d,]+)\s+RESULTS/i) ||
+    text.match(/([\d,]+)\s+resultados/i);
+  if (!match) return 0;
+  return Number(match[1].replace(/,/g, ""));
+}
+
+function inferBingResultCount(html: string, domain: string) {
+  const $ = load(html);
+  const domainPattern = new RegExp(escapeRegExp(domain), "i");
+
+  const resultAnchors = $("li.b_algo, .b_algo, main li, main article, a[href]")
     .toArray()
-    .map((entry) => $(entry).text().trim());
-  const questionLikeHeadings = headings.filter(
-    (heading) => heading.includes("?") || /^(what|how|why|when|can|do)\b/i.test(heading),
-  );
-  const faqSchema = /"@type"\s*:\s*"FAQPage"/i.test(html);
+    .map((entry) => $(entry).text())
+    .filter((text) => domainPattern.test(text)).length;
+
+  if (resultAnchors >= 10) return 1_000;
+  if (resultAnchors >= 5) return 100;
+  if (resultAnchors >= 1) return 10;
+  if (html.toLowerCase().includes(domain.toLowerCase())) return 1;
+  return 0;
+}
+
+async function checkBingPresence(domain: string) {
+  const origin = `https://${domain}`;
+  try {
+    const html = await fetchText(`https://www.bing.com/search?q=${encodeURIComponent(`site:${domain}`)}`);
+    const explicitCount = parseBingResultCount(html);
+    const sitemapCount = explicitCount > 0 ? 0 : await estimateIndexedPagesFromSitemaps(origin);
+    const visibleResultsCount =
+      explicitCount > 0 || sitemapCount > 0 ? 0 : inferBingResultCount(html, domain);
+    const count = explicitCount || sitemapCount || visibleResultsCount;
+    let score = 0;
+    if (count >= 10_000) score = 10;
+    else if (count >= 1_000) score = 8;
+    else if (count >= 100) score = 5;
+    else if (count >= 1) score = 3;
+
+    return {
+      count,
+      estimated: explicitCount === 0,
+      source:
+        explicitCount > 0
+          ? "bing"
+          : sitemapCount > 0
+            ? "sitemap"
+            : visibleResultsCount > 0
+              ? "visible_results"
+              : "unavailable",
+      score,
+    };
+  } catch {
+    return {
+      count: 0,
+      estimated: true,
+      source: "unavailable",
+      score: 3,
+    };
+  }
+}
+
+async function checkBrandFootprint(companyName: string, domain: string) {
+  const companyPattern = new RegExp(escapeRegExp(companyName), "i");
+  const domainPattern = new RegExp(escapeRegExp(domain.replace(/^www\./, "")), "i");
+  const queries = [
+    `${companyName} review`,
+    `"${companyName}" review`,
+    `${companyName} reddit`,
+    `${companyName} wikipedia`,
+    `${domain} review`,
+  ];
+
+  let aggregateHtml = "";
+
+  try {
+    for (const query of queries.slice(0, 2)) {
+      const html = await fetchText(
+        `https://www.google.com/search?q=${encodeURIComponent(query)}&hl=en`,
+      );
+      aggregateHtml += ` ${html}`;
+    }
+  } catch {
+    // fall through to alternate search source
+  }
+
+  if (!aggregateHtml.trim()) {
+    try {
+      for (const query of queries) {
+        const html = await fetchText(
+          `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`,
+        );
+        aggregateHtml += ` ${html}`;
+      }
+    } catch {
+      return {
+        hasKnowledgeSource: false,
+        hasReddit: false,
+        hasReviewSite: false,
+        score: 1,
+      };
+    }
+  }
+
+  const lower = aggregateHtml.toLowerCase();
+  let hasReviewSite = /g2\.com|capterra\.com|trustpilot\.com/.test(lower);
+  let hasReddit = /reddit\.com/.test(lower);
+  let hasKnowledgeSource = /wikipedia\.org/.test(lower);
+
+  if (!hasReviewSite) {
+    try {
+      const reviewChecks = await Promise.allSettled([
+        fetchText(`https://www.g2.com/search?query=${encodeURIComponent(companyName)}`),
+        fetchText(`https://www.capterra.com/search/?query=${encodeURIComponent(companyName)}`),
+        fetchText(`https://www.trustpilot.com/search?query=${encodeURIComponent(companyName)}`),
+      ]);
+
+      hasReviewSite = reviewChecks.some(
+        (result) =>
+          result.status === "fulfilled" &&
+          (companyPattern.test(result.value) || domainPattern.test(result.value)),
+      );
+    } catch {
+      // Ignore direct review-site lookup failures.
+    }
+  }
+
+  if (!hasReddit) {
+    try {
+      const response = await fetch(
+        `https://www.reddit.com/search.json?q=${encodeURIComponent(companyName)}&limit=5&sort=relevance&t=all`,
+        {
+          headers: {
+            "user-agent": USER_AGENT,
+            accept: "application/json,text/plain,*/*",
+          },
+          signal: AbortSignal.timeout(10_000),
+        },
+      );
+
+      if (response.ok) {
+        const payload = (await response.json()) as {
+          data?: { children?: Array<{ data?: { title?: string; url?: string; selftext?: string } }> };
+        };
+        hasReddit = Boolean(
+          payload.data?.children?.some((child) => {
+            const blob = `${child.data?.title || ""} ${child.data?.url || ""} ${child.data?.selftext || ""}`;
+            return companyPattern.test(blob) || domainPattern.test(blob);
+          }),
+        );
+      }
+    } catch {
+      // Ignore Reddit lookup failures.
+    }
+  }
+
+  if (!hasKnowledgeSource) {
+    try {
+      const response = await fetch(
+        `https://en.wikipedia.org/w/rest.php/v1/search/page?q=${encodeURIComponent(companyName)}&limit=5`,
+        {
+          headers: {
+            "user-agent": USER_AGENT,
+            accept: "application/json,text/plain,*/*",
+          },
+          signal: AbortSignal.timeout(10_000),
+        },
+      );
+
+      if (response.ok) {
+        const payload = (await response.json()) as {
+          pages?: Array<{ title?: string; excerpt?: string }>;
+        };
+        hasKnowledgeSource = Boolean(
+          payload.pages?.some((page) => {
+            const blob = `${page.title || ""} ${page.excerpt || ""}`;
+            return companyPattern.test(blob) || domainPattern.test(blob);
+          }),
+        );
+      }
+    } catch {
+      // Ignore Wikipedia lookup failures.
+    }
+  }
 
   let score = 0;
-  score += faqSchema ? 8 : 0;
-  score += clamp(questionLikeHeadings.length, 0, 12);
+  if (hasReviewSite) score += 2;
+  if (hasReddit) score += 2;
+  if (hasKnowledgeSource) score += 1;
 
-  const diagnosis =
-    score >= 14
-      ? "The site already exposes enough buyer questions for AI agents to quote or summarize reliably."
-      : "FAQ coverage is thin. AI agents need direct question-answer pairs for transactional and comparison queries.";
-
-  return buildDimension("faq-coverage", "FAQ Coverage", score, diagnosis, [
-    faqSchema
-      ? "FAQPage schema detected."
-      : "FAQPage schema was not detected on the crawled page.",
-    `Question-like headings found: ${questionLikeHeadings.length}.`,
-  ]);
+  return {
+    hasKnowledgeSource,
+    hasReddit,
+    hasReviewSite,
+    score,
+  };
 }
 
-function analyzeTrustSignals(bodyText: string) {
-  const lowerBody = bodyText.toLowerCase();
-  const trustMarkers = [
-    /\btrusted by\b/,
-    /\bcustomer stories\b|\bcase study\b|\btestimonials\b/,
-    /\bsoc ?2\b|\biso ?27001\b|\bgdpr\b/,
-    /\bfounded in\b|\bestablished\b/,
-    /\bceo\b|\bfounder\b|\bleadership\b/,
-    /\b\d{2,}\+ customers\b|\b\d{2,}\+ teams\b|\b\d{2,}\+ companies\b/,
-  ];
-
-  const matched = trustMarkers.filter((pattern) => pattern.test(lowerBody)).length;
-  const score = clamp(matched * 2, 0, 10);
-  const diagnosis =
-    score >= 6
-      ? "The page includes enough concrete proof points to make citations feel defensible."
-      : "Trust signals are too light. Add named proof, quantified claims, reviews, and leadership credibility.";
-
-  return buildDimension("trust-signals", "Trust Signals", score, diagnosis, [
-    `Trust-signal patterns matched: ${matched}.`,
-    matched
-      ? "Review, compliance, customer-count, or leadership language was detected."
-      : "Little concrete proof language was detected on the crawled page.",
-  ]);
-}
-
-function analyzeCitationReadiness(bodyText: string) {
-  const lowerBody = bodyText.toLowerCase();
-  const markers = [
-    /\bas seen in\b|\bfeatured in\b|\bmentioned by\b/,
-    /\bcompare\b|\balternative to\b|\bversus\b/,
-    /\bpricing\b/,
-    /\bfaq\b|\bfrequently asked questions\b/,
-    /\bcase study\b|\bproof\b/,
-  ];
-
-  const matched = markers.filter((pattern) => pattern.test(lowerBody)).length;
-  const score = clamp(matched, 0, 5);
-  const diagnosis =
-    score >= 3
-      ? "The site has enough structured buying and proof content to compete for AI citations."
-      : "The site lacks the explicit comparison, proof, and question-answer assets that commonly feed AI citations.";
-
-  return buildDimension(
-    "citation-readiness",
-    "Citation Readiness",
+function buildDimension(
+  resultKey: keyof ScoreResult["dimensions"],
+  score: number,
+  diagnosis: string,
+  evidence: string[],
+) {
+  const meta = DIMENSION_META[resultKey];
+  return {
+    key: meta.key,
+    label: meta.label,
+    weight: meta.weight,
     score,
     diagnosis,
-    [
-      `Citation-readiness patterns matched: ${matched}.`,
-      "This heuristic substitutes for a full off-site citation baseline in the MVP.",
-    ],
-  );
+    evidence,
+  } satisfies ScoreDimension;
 }
 
 function buildRecommendations(
   dimensions: ScoreDimension[],
-  overallScore: number,
+  companyName: string,
 ): Recommendation[] {
-  const templates: Record<
-    ScoreDimensionKey,
-    Omit<Recommendation, "id" | "locked">
-  > = {
-    "structured-data": {
-      title: "Ship a schema pack on core money pages",
-      detail:
-        "Add Organization, Product, FAQPage, BreadcrumbList, and review schema to the homepage, pricing page, and top product pages so models stop guessing your entity context.",
-      impact: "High",
-      effort: "Medium",
-    },
-    "content-clarity": {
-      title: "Rewrite page openings for extraction, not only persuasion",
-      detail:
-        "Make the first 100 words answer who you serve, what you do, and what makes you different. Then tighten heading hierarchy so LLMs can map the page without inference.",
-      impact: "High",
-      effort: "Low",
-    },
-    "pricing-transparency": {
-      title: "Expose pricing or buying-path clarity on-page",
-      detail:
-        "If you cannot show full pricing, at least show package ranges, minimum contract values, and what is included. Hidden pricing suppresses citation confidence for transactional queries.",
-      impact: "High",
-      effort: "Medium",
-    },
-    "faq-coverage": {
-      title: "Publish the 12 buyer questions AI agents keep looking for",
-      detail:
-        "Create a real FAQ block covering fit, implementation, integrations, security, pricing, migration, and competitor comparison. Pair it with FAQPage schema.",
-      impact: "High",
-      effort: "Low",
-    },
-    "trust-signals": {
-      title: "Add named proof instead of generic credibility copy",
-      detail:
-        "Put customer counts, review quotes, certifications, leadership names, and dated case studies directly on the page. Specificity increases model trust far more than slogans.",
-      impact: "Medium",
-      effort: "Low",
-    },
-    "citation-readiness": {
-      title: "Build pages that can win recommendation queries",
-      detail:
-        "Launch comparison pages, category pages, and evidence-backed use-case pages for your most valuable buying queries. These assets directly expand citation surface area.",
-      impact: "High",
-      effort: "High",
-    },
-  };
+  const sorted = [...dimensions].sort(
+    (left, right) => left.score / left.weight - right.score / right.weight,
+  );
 
-  const ranked = [...dimensions].sort((left, right) => left.score - right.score);
-
-  const recommendations = ranked.map((dimension, index) => ({
+  const base = sorted.map((dimension, index) => ({
     id: `${dimension.key}-${index + 1}`,
+    title: `Improve ${dimension.label.toLowerCase()}`,
+    detail: dimension.diagnosis,
+    impact: index < 4 ? "High" : "Medium",
+    effort:
+      dimension.weight >= 20 ? "Medium" : dimension.weight <= 10 ? "Low" : "High",
     locked: index >= 3,
-    ...templates[dimension.key],
-  }));
+  })) satisfies Recommendation[];
 
-  if (overallScore < 45) {
-    recommendations.push({
-      id: "launch-money-page",
-      locked: true,
-      title: "Create a dedicated AEO-ready pricing or solution page",
+  while (base.length < 10) {
+    base.push({
+      id: `aeo-${base.length + 1}`,
+      title: `Add another citation-ready page for ${companyName}`,
       detail:
-        "Right now the site is forcing AI systems to synthesize from weak signals. A single high-intent solution page with proof, pricing language, FAQs, and schema can move citations quickly.",
-      impact: "High",
-      effort: "High",
+        "Publish one direct-answer page for a high-intent query, add proof, then re-run the score.",
+      impact: "Medium",
+      effort: "Medium",
+      locked: base.length >= 3,
     });
   }
 
-  recommendations.push({
-    id: "competitor-gap",
-    locked: true,
-    title: "Run a 25-query competitor citation baseline",
-    detail:
-      "Measure where competitors are being cited instead of you, then prioritize fixes by expected citation-share lift rather than generic SEO best practices.",
-    impact: "High",
-    effort: "Medium",
-  });
-
-  recommendations.push({
-    id: "retainer-pilot",
-    locked: true,
-    title: "Turn the fixes into a 90-day implementation sprint",
-    detail:
-      "Bundle schema, FAQ, proof, pricing, and content improvements into a weekly operating plan. The service business is where AEOSpark captures outcome value, not another dashboard.",
-    impact: "Medium",
-    effort: "Medium",
-  });
-
-  return recommendations.slice(0, 10);
+  return base.slice(0, 10);
 }
 
-async function analyzeSingleUrl(input: string) {
-  const page = await fetchWebsiteHtml(input);
-  const $ = load(page.html);
-  const bodyText = $("body").text().replace(/\s+/g, " ").trim();
-  const companyName = detectCompanyName($, page.url);
+function verdictFromTotal(total: number) {
+  if (total >= 75) {
+    return "AI agents can resolve the business, but you still have index and proof gaps to close.";
+  }
+  if (total >= 60) {
+    return "The site is partially readable by AI, but citation visibility is inconsistent and fragile.";
+  }
+  if (total >= 45) {
+    return "The site has enough public content to score, but AI visibility is weak across high-intent queries.";
+  }
+  return "The site is effectively invisible to AI assistants on the signals that drive citations.";
+}
 
-  const dimensions = [
-    analyzeStructuredData(page.html),
-    analyzeContentClarity($, bodyText),
-    analyzePricingTransparency(bodyText),
-    analyzeFaqCoverage($, page.html),
-    analyzeTrustSignals(bodyText),
-    analyzeCitationReadiness(bodyText),
-  ];
+function executiveSummary(
+  companyName: string,
+  total: number,
+  weakest: ScoreDimension[],
+) {
+  const weakAreas = weakest.map((dimension) => dimension.label.toLowerCase()).join(" and ");
+  return `${companyName} scored ${total}/100. The biggest visibility constraints are ${weakAreas}, which directly limit how often AI assistants can cite the company in answer flows.`;
+}
 
-  const overallScore = dimensions.reduce(
-    (total, dimension) => total + dimension.score,
-    0,
+function evidenceForDimension(
+  dimensionKey: keyof ScoreResult["dimensions"],
+  crawlResult: CrawlResult,
+) {
+  switch (dimensionKey) {
+    case "crawler_access":
+      return [
+        "Reviewed robots.txt for GPTBot, ClaudeBot, PerplexityBot, and Bingbot rules.",
+        crawlResult.hasLlmsTxt ? "llms.txt was found at the site root." : "No llms.txt file was found at the site root.",
+      ];
+    case "structured_data":
+      return [
+        "Parsed homepage JSON-LD blocks for FAQPage, Organization, Product, and SoftwareApplication schema.",
+        "Stored schema score only from parseable structured data, not visual markup guesses.",
+      ];
+    case "content_arch":
+      return [
+        "Checked the first paragraph, heading hierarchy, FAQ density, and comparison-table presence.",
+        `Scanned the homepage plus ${Math.min(crawlResult.pages.length, 3)} additional linked pages for answer structure.`,
+      ];
+    case "pricing":
+      return [
+        "Tested /pricing, /plans, and /price for public access without login.",
+        "Looked for visible currency, billing terms, and free-trial language.",
+      ];
+    case "authority":
+      return [
+        "Looked for named leadership, quantified customer proof, review badges, and cited statistics.",
+        `Scanned homepage copy plus ${Math.min(crawlResult.pages.length, 4)} linked pages for authority signals.`,
+      ];
+    case "bing_presence":
+      return [
+        `Queried Bing for site:${crawlResult.domain}.`,
+        "Converted result-count visibility into the 0-10 Bing presence score.",
+      ];
+    case "brand_footprint":
+      return [
+        `Queried Google for ${companyNameFromDomain(crawlResult.domain)} review terms.`,
+        "Checked search results for review sites, Reddit discussion, and Wikipedia presence.",
+      ];
+    default:
+      return [];
+  }
+}
+
+export async function scoreUrl(crawlResult: CrawlResult): Promise<ScoreResult> {
+  const structuredData = analyzeStructuredData(crawlResult.html, crawlResult.pages);
+  const $ = load(crawlResult.html);
+  const domain = crawlResult.domain || domainFromUrl(crawlResult.url);
+  const companyName = companyNameFromDomain(domain);
+
+  const crawlerBots = ["GPTBot", "ClaudeBot", "PerplexityBot", "Bingbot"] as const;
+  const allowedBots = crawlerBots.filter((bot) => botAllowed(crawlResult.robotsTxt, bot));
+  const crawlerAccessScore = allowedBots.length * 3 + (crawlResult.hasLlmsTxt ? 3 : 0);
+
+  const answerFirst = answerFirstParagraphScore(crawlResult.html, domain);
+  const h2Count = $("h2").length;
+  const h3Count = $("h3").length;
+  const faqPairs = countFaqPairs(crawlResult.html, crawlResult.pages, structuredData);
+  const hasComparisonTable =
+    $("table").length > 0 ||
+    /compar/i.test(crawlResult.html) ||
+    crawlResult.pages.some((page) => /compar/i.test(page.html) || load(page.html)("table").length > 0);
+
+  let contentArchScore = 0;
+  if (answerFirst.matched) contentArchScore += 6;
+  if (h2Count > 0 && h3Count > 0) contentArchScore += 4;
+  if (faqPairs >= 30) contentArchScore += 6;
+  else if (faqPairs >= 15) contentArchScore += 4;
+  else if (faqPairs >= 5) contentArchScore += 2;
+  else if (faqPairs >= 1) contentArchScore += 1;
+  if (hasComparisonTable) contentArchScore += 4;
+
+  const pricing = await checkPricingVisibility(crawlResult.url, crawlResult.pages);
+  const authority = findAuthoritySignals(crawlResult.html, crawlResult.pages);
+  const bing = await checkBingPresence(domain);
+  const brand = await checkBrandFootprint(companyName, domain);
+
+  const total =
+    crawlerAccessScore +
+    structuredData.score +
+    contentArchScore +
+    pricing.score +
+    authority.score +
+    bing.score +
+    brand.score;
+
+  return {
+    total,
+    grade: getGrade(total),
+    dimensions: {
+      crawler_access: crawlerAccessScore,
+      structured_data: structuredData.score,
+      content_arch: contentArchScore,
+      pricing: pricing.score,
+      authority: authority.score,
+      bing_presence: bing.score,
+      brand_footprint: brand.score,
+    },
+    diagnoses: {
+      crawler_access: `${allowedBots.length}/4 named AI crawlers appear allowed in robots.txt (${allowedBots.join(", ") || "none"}). llms.txt ${crawlResult.hasLlmsTxt ? "exists" : "is missing"}, so crawler access scored ${crawlerAccessScore}/15.`,
+      structured_data:
+        structuredData.score > 0
+          ? `Detected ${structuredData.discoveredTypes.length ? "schema types" : "machine-readable schema signals"}: ${[
+              structuredData.faqFound ? "FAQPage" : null,
+              structuredData.organizationFound ? "Organization" : null,
+              structuredData.softwareApplicationFound ? "SoftwareApplication" : null,
+              structuredData.productFound ? "Product" : null,
+              structuredData.microdataFound ? "Schema.org microdata/meta tags" : null,
+              ...structuredData.otherTypes,
+            ]
+              .filter(Boolean)
+              .join(", ")} across ${structuredData.pageCount} page${structuredData.pageCount === 1 ? "" : "s"}. Structured data scored ${structuredData.score}/20.`
+          : "No parseable JSON-LD schema or schema.org-style microdata was found across the homepage and sampled commercial pages, so AI systems have little machine-readable product or entity context.",
+      content_arch: `First paragraph ${answerFirst.matched ? "is" : "is not"} answer-first. Found ${h2Count} H2 tags, ${h3Count} H3 tags, approximately ${faqPairs} FAQ-style pairs, and ${hasComparisonTable ? "a" : "no"} comparison table, for ${contentArchScore}/20.`,
+      pricing:
+        pricing.accessiblePage && !pricing.blockedByContactOnly
+          ? `Public pricing page found at ${pricing.accessiblePage}. ${/[$€£]|per month|per year/.test(pricing.pricingText) ? "Explicit price language is visible." : "No explicit dollar amount is visible."} ${pricing.hasFreeTrial ? "Free-trial language is present." : "No free-trial language was found."}`
+          : pricing.blockedByContactOnly
+            ? 'Pricing appears to be hidden behind "contact sales" language with no public dollar amounts, which scored 0/15.'
+            : "No public pricing page was found at /pricing, /plans, or /price, so pricing visibility scored 0/15.",
+      authority: `Authority scored ${authority.score}/15. ${authority.leadershipMatch ? `Leadership mention found (${authority.leadershipMatch[0]}).` : "No named founder or CEO match found."} ${authority.customerCountMatch ? `Customer proof found (${authority.customerCountMatch[0]}).` : "No quantified customer proof found."} ${authority.reviewBadgeFound ? "Review-platform badge detected." : "No G2, Capterra, or Trustpilot badge detected."} ${authority.externalStatsMatch ? "Externally cited statistics were found." : "No cited external statistics were found."}`,
+      bing_presence: !bing.estimated
+        ? `Only ${bing.count.toLocaleString()} pages appear indexed on Bing, which scored ${bing.score}/10. ChatGPT visibility is constrained when Bing coverage is shallow.`
+        : bing.source === "sitemap"
+          ? `Bing returned no explicit result count, so AEOSpark estimated approximately ${bing.count.toLocaleString()} crawlable page${bing.count === 1 ? "" : "s"} from the site's sitemap footprint and assigned ${bing.score}/10.`
+          : bing.source === "visible_results"
+            ? `Bing returned no explicit result count, so AEOSpark inferred approximately ${bing.count.toLocaleString()} indexed page${bing.count === 1 ? "" : "s"} from visible results and assigned ${bing.score}/10.`
+            : "Bing presence check was unavailable, so AEOSpark assigned the conservative fallback score of 3/10.",
+      brand_footprint: `Brand-footprint scored ${brand.score}/5. ${brand.hasReviewSite ? "Review-platform visibility was found in search results." : "No G2, Capterra, or Trustpilot result was found."} ${brand.hasReddit ? "Reddit discussion exists." : "No Reddit discussion result was found."} ${brand.hasKnowledgeSource ? "Wikipedia presence exists." : "No Wikipedia result was found."}`,
+    },
+    crawl_status: crawlResult.crawl_status,
+  };
+}
+
+export function scoreResultToRecord(input: {
+  createdAt?: string;
+  crawlResult: CrawlResult;
+  scoreId: string;
+  scoreResult: ScoreResult;
+}) {
+  const { crawlResult, scoreId, scoreResult } = input;
+  const companyName = companyNameFromDomain(crawlResult.domain);
+
+  const dimensions = (
+    Object.keys(scoreResult.dimensions) as Array<keyof ScoreResult["dimensions"]>
+  ).map((dimensionKey) =>
+    buildDimension(
+      dimensionKey,
+      scoreResult.dimensions[dimensionKey],
+      scoreResult.diagnoses[dimensionKey],
+      evidenceForDimension(dimensionKey, crawlResult),
+    ),
   );
 
+  const weakest = [...dimensions]
+    .sort((left, right) => left.score / left.weight - right.score / right.weight)
+    .slice(0, 2);
+
   return {
-    url: page.url,
+    id: scoreId,
+    createdAt: input.createdAt ?? new Date().toISOString(),
+    publicSlug: `${slugify(companyName)}-${scoreId.slice(0, 8)}`,
+    url: crawlResult.url,
     companyName,
-    overallScore,
-    verdict: summarizeVerdict(overallScore),
-    crawlStatus: page.crawlStatus,
-    crawlNotes: page.crawlNotes,
+    overallScore: scoreResult.total,
+    verdict: verdictFromTotal(scoreResult.total),
+    executiveSummary: executiveSummary(companyName, scoreResult.total, weakest),
+    crawlStatus:
+      scoreResult.crawl_status === "success"
+        ? "live"
+        : scoreResult.crawl_status,
+    crawlNotes: [
+      scoreResult.diagnoses.crawler_access,
+      scoreResult.crawl_status === "blocked"
+        ? "The crawler was partially blocked, so the score is conservative."
+        : scoreResult.crawl_status === "partial"
+          ? "The crawl timed out early, so this score is based on partial coverage."
+          : "Live crawl completed successfully.",
+    ],
+    teaserPdfReady: true,
+    calendlyUrl: "https://calendly.com",
     dimensions,
-  };
-}
-
-function buildComparison(
-  primary: Awaited<ReturnType<typeof analyzeSingleUrl>>,
-  competitor: Awaited<ReturnType<typeof analyzeSingleUrl>>,
-): ComparisonScore {
-  return {
-    url: competitor.url,
-    companyName: competitor.companyName,
-    overallScore: competitor.overallScore,
-    verdict: competitor.verdict,
-    dimensions: competitor.dimensions,
-    gapVsPrimary: competitor.overallScore - primary.overallScore,
-  };
-}
-
-export async function createScorecard(inputUrl: string, competitorUrl?: string) {
-  const [primary, competitor] = await Promise.all([
-    analyzeSingleUrl(inputUrl),
-    competitorUrl ? analyzeSingleUrl(competitorUrl) : Promise.resolve(undefined),
-  ]);
-
-  const score: ScoreRecord = {
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    url: primary.url,
-    companyName: primary.companyName,
-    overallScore: primary.overallScore,
-    verdict: primary.verdict,
-    executiveSummary:
-      primary.overallScore < 50
-        ? `${primary.companyName} is likely losing recommendation queries because the site is underspecified for AI extraction.`
-        : `${primary.companyName} has a workable AEO foundation, but its visibility upside depends on tightening the weakest dimensions first.`,
-    crawlStatus: primary.crawlStatus,
-    crawlNotes: primary.crawlNotes,
-    dimensions: primary.dimensions,
-    recommendations: buildRecommendations(primary.dimensions, primary.overallScore),
-    comparison:
-      competitor && competitor.url !== primary.url
-        ? buildComparison(primary, competitor)
-        : undefined,
-  };
-
-  return score;
+    recommendations: buildRecommendations(dimensions, companyName),
+  } satisfies ScoreRecord;
 }

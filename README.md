@@ -1,54 +1,79 @@
-AEOSpark is a Next.js implementation of the FRD you attached: free score widget, lead capture gate, paid audit checkout, confirmation flow, and a client monitor portal.
+AEOSpark is a Next.js app for AI visibility scoring, lead capture, Stripe-hosted audit checkout, confirmation flow, PDF delivery, and the foundations for a retainer client portal.
 
-## What is built
-
-- Landing page with AEOSpark positioning and URL intake
-- URL scoring engine with six AEO dimensions
-- Optional competitor comparison during score creation
-- Score results page with diagnostics and recommendation preview
-- Email gate that unlocks the full recommendation set
-- Local mock automation for welcome and follow-up email jobs
-- Audit checkout flow with success and decline branches
-- Confirmation page with portal handoff
-- Client portal for citation-share reporting and BYOK readiness
-- Local JSON persistence in `data/*.json`
-
-## Getting started
-
-Install dependencies and run the app:
+## Local development
 
 ```bash
+npm install
 npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000).
+## Paid delivery checks
 
-## Local storage
+The paid audit path now fails loud in production:
 
-This build is intentionally runnable without vendor credentials. Records are written to:
+- `AEOSPARK_EMAIL_FROM` must be set to a verified sender domain
+- `AEOSPARK_ENCRYPTION_KEY` must be set to a unique production secret
+- paid delivery emails no longer silently degrade to mock mode
 
-- `data/scores.json`
-- `data/leads.json`
-- `data/orders.json`
-- `data/clients.json`
-- `data/jobs.json`
+Run the integration suite with:
 
-## Provider swap points
+```bash
+npm run test:e2e
+```
 
-Replace the local adapters when you are ready:
+## Proof assets
 
-- `/src/app/api/score/route.ts` -> persist scores to Supabase and enqueue Inngest
-- `/src/app/api/leads/route.ts` -> send Resend emails and CRM events
-- `/src/app/api/orders/route.ts` -> create Stripe PaymentIntents or Checkout Sessions
-- `/src/lib/storage.ts` -> swap JSON persistence for Supabase tables
-- `/src/app/monitor/[clientId]/page.tsx` -> replace seeded portal data with live citation runs
+Public proof assets are available at:
 
-## Environment
+- `/proof/sample-audit-report.html`
+- `/proof/alphawhale-case-study.html`
+- `/proof/citation-share-story.html`
 
-See [.env.example](/Users/meghalparikh/Downloads/AEOSpark/.env.example) for the expected variables.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Notes
+## Required env vars
 
-- The crawler uses live `fetch()` when possible and falls back to a heuristic HTML shell if a site blocks or times out.
-- The checkout flow is local-first. The `Pay $2,500` button records a successful order and creates the client portal.
-- The decline button intentionally demonstrates the error branch from your user flow.
+See [.env.example](/Users/meghalparikh/Downloads/AEOSpark/.env.example).
+
+Current production-relevant vars:
+- `DATABASE_URL`
+- `DIRECT_URL`
+- `NEXT_PUBLIC_APP_URL`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_AUDIT_PRICE_ID`
+- `STRIPE_WEBHOOK_SECRET`
+- `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY`
+- `INNGEST_EVENT_KEY`
+- `INNGEST_SIGNING_KEY`
+- `CRAWLER_SERVICE_URL`
+
+## Deployment notes
+
+- Frontend/API deploys to Vercel.
+- The crawler service should run separately and be exposed via `CRAWLER_SERVICE_URL`.
+- Stripe webhooks must point to `/api/stripe/webhook` on the public Vercel domain.
+- Supabase remains the source of truth for scores, leads, orders, audits, clients, and citation results.
+
+## Verification
+
+```bash
+npm run lint
+npm run build
+```
+
+## Autoresearch
+
+This repo includes an `autoresearch/` workspace inspired by [karpathy/autoresearch](https://github.com/karpathy/autoresearch), adapted to AEOSpark's scoring engine instead of single-GPU model training.
+
+Run the benchmark loop with:
+
+```bash
+npm run autoresearch:run
+```
+
+Then inspect:
+
+- [autoresearch/program.md](/Users/meghalparikh/Downloads/AEOSpark/autoresearch/program.md)
+- [autoresearch/README.md](/Users/meghalparikh/Downloads/AEOSpark/autoresearch/README.md)

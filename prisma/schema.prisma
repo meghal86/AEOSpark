@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Score {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  url                 String
+  domain              String
+  scoreTotal          Int?     @map("score_total")
+  scoreCrawlerAccess  Int?     @map("score_crawler_access")
+  scoreStructuredData Int?     @map("score_structured_data")
+  scoreContentArch    Int?     @map("score_content_arch")
+  scorePricing        Int?     @map("score_pricing")
+  scoreAuthority      Int?     @map("score_authority")
+  scoreBingPresence   Int?     @map("score_bing_presence")
+  scoreBrandFootprint Int?     @map("score_brand_footprint")
+  scoreDetails        Json?    @map("score_details")
+  crawlStatus         String?  @default("pending") @map("crawl_status")
+  jobStatus           String?  @default("pending") @map("job_status")
+  jobStep             String?  @map("job_step")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  leads               Lead[]
+
+  @@index([domain])
+  @@map("scores")
+}
+
+model Lead {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String?
+  email       String
+  url         String?
+  scoreId     String?  @map("score_id") @db.Uuid
+  source      String?  @default("score_gate")
+  pdfSent     Boolean? @default(false) @map("pdf_sent")
+  followupSent Boolean? @default(false) @map("followup_sent")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  score       Score?   @relation(fields: [scoreId], references: [id])
+
+  @@index([email])
+  @@map("leads")
+}
+
+model Order {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String
+  name                  String?
+  url                   String
+  stripePaymentIntentId String        @unique @map("stripe_payment_intent_id")
+  amountCents           Int?          @default(99700) @map("amount_cents")
+  status                String?       @default("pending")
+  reportUrl             String?       @map("report_url")
+  calendlyBooked        Boolean?      @default(false) @map("calendly_booked")
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  deliveredAt           DateTime?     @map("delivered_at") @db.Timestamptz(6)
+  auditResults          AuditResult[]
+
+  @@map("orders")
+}
+
+model AuditResult {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId            String?   @map("order_id") @db.Uuid
+  domain             String
+  chatgptQueries     Json?     @map("chatgpt_queries")
+  claudeQueries      Json?     @map("claude_queries")
+  citationSharePct   Decimal?  @map("citation_share_pct") @db.Decimal(5, 2)
+  competitor1Domain  String?   @map("competitor_1_domain")
+  competitor1SharePct Decimal? @map("competitor_1_share_pct") @db.Decimal(5, 2)
+  competitor2Domain  String?   @map("competitor_2_domain")
+  competitor2SharePct Decimal? @map("competitor_2_share_pct") @db.Decimal(5, 2)
+  bingIndexed        Boolean?  @map("bing_indexed")
+  bingPageCount      Int?      @map("bing_page_count")
+  braveIndexed       Boolean?  @map("brave_indexed")
+  redditMentions     Int?      @map("reddit_mentions")
+  g2Listed           Boolean?  @map("g2_listed")
+  capterraListed     Boolean?  @map("capterra_listed")
+  trustpilotListed   Boolean?  @map("trustpilot_listed")
+  pagesAudited       Int?      @map("pages_audited")
+  citationReadyPages Int?      @map("citation_ready_pages")
+  fullReportJson     Json?     @map("full_report_json")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  order              Order?    @relation(fields: [orderId], references: [id])
+
+  @@map("audit_results")
+}
+
+model Client {
+  id                   String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                String           @unique
+  domain               String
+  plan                 String?
+  stripeSubscriptionId String?          @map("stripe_subscription_id")
+  anthropicKeyEncrypted String?         @map("anthropic_key_encrypted")
+  openaiKeyEncrypted   String?          @map("openai_key_encrypted")
+  queryLibrary         Json?            @map("query_library")
+  competitors          Json?
+  active               Boolean?         @default(true)
+  createdAt            DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  citationResults      CitationResult[]
+
+  @@map("clients")
+}
+
+model CitationResult {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId        String?   @map("client_id") @db.Uuid
+  query           String
+  platform        String?
+  cited           Boolean?
+  competitorCited String?   @map("competitor_cited")
+  sentiment       String?
+  rawResponse     String?   @map("raw_response")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  client          Client?   @relation(fields: [clientId], references: [id])
+
+  @@index([clientId, createdAt])
+  @@map("citation_results")
+}

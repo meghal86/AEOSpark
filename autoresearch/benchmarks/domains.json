@@ -1,0 +1,32 @@
+[
+  {
+    "id": "vercel",
+    "url": "https://vercel.com",
+    "notes": "Strong technical product marketing site with clear pricing, docs, and authority signals."
+  },
+  {
+    "id": "linear",
+    "url": "https://linear.app",
+    "notes": "Modern SaaS homepage with dense product copy, social proof, and structured navigation."
+  },
+  {
+    "id": "notion",
+    "url": "https://www.notion.com",
+    "notes": "Large multi-product workspace brand with rich commercial content and broad brand footprint."
+  },
+  {
+    "id": "stripe",
+    "url": "https://stripe.com",
+    "notes": "Best-in-class commercial site for pricing visibility, authority, and developer trust."
+  },
+  {
+    "id": "intercom",
+    "url": "https://www.intercom.com",
+    "notes": "Customer support SaaS site with pricing, comparison, and FAQ coverage."
+  },
+  {
+    "id": "zapier",
+    "url": "https://zapier.com",
+    "notes": "Automation SaaS site with deep content architecture and substantial indexed footprint."
+  }
+]

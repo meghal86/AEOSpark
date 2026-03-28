@@ -18,24 +18,32 @@ export function scoreTone(score: number) {
   if (score >= 75) {
     return {
       label: "Strong",
-      className: "text-emerald-300",
-      barClassName: "from-emerald-400 to-lime-300",
+      className: "text-emerald-700",
+      barClassName: "from-emerald-700 to-lime-600",
     };
   }
 
   if (score >= 50) {
     return {
       label: "Recoverable",
-      className: "text-amber-300",
-      barClassName: "from-amber-400 to-orange-300",
+      className: "text-amber-700",
+      barClassName: "from-amber-700 to-orange-500",
     };
   }
 
   return {
     label: "Urgent",
-    className: "text-rose-300",
-    barClassName: "from-rose-500 to-orange-400",
+    className: "text-rose-700",
+    barClassName: "from-rose-700 to-orange-500",
   };
+}
+
+export function scoreGrade(score: number) {
+  if (score >= 90) return "A";
+  if (score >= 75) return "B";
+  if (score >= 60) return "C";
+  if (score >= 45) return "D";
+  return "F";
 }
 
 export function percent(value: number) {

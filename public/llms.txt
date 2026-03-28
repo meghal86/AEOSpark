@@ -1,0 +1,10 @@
+# AEOSpark
+AEOSpark helps companies measure and improve their visibility to AI agents like ChatGPT, Claude, Gemini, and Perplexity.
+
+## Product
+Free AEO Score widget at aeospark.com
+Paid AI visibility audits at $997
+Implementation retainers from $3,000/month
+
+## Contact
+hello@aeospark.com

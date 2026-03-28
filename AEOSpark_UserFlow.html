@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEOSpark — User Flow Diagram</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:#080D1A;color:#fff;padding:32px 24px;min-height:100vh;}
+h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;}
+h1 span{color:#3B82F6;}
+.sub{font-size:13px;color:rgba(255,255,255,.4);margin-bottom:36px;}
+.flow{display:flex;flex-direction:column;gap:0;max-width:900px;margin:0 auto;}
+.row{display:flex;align-items:stretch;gap:0;}
+.step{
+  background:#fff;color:#0F172A;border-radius:10px;padding:14px 16px;
+  min-width:160px;max-width:200px;flex-shrink:0;
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  position:relative;
+}
+.step-num{font-size:10px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.step-title{font-size:13px;font-weight:700;color:#0F172A;line-height:1.35;margin-bottom:4px;}
+.step-url{font-size:10.5px;color:#3B82F6;font-family:monospace;margin-bottom:5px;}
+.step-desc{font-size:11px;color:#64748B;line-height:1.5;}
+.step-blue{background:#1D4ED8;color:#fff;}
+.step-blue .step-num,.step-blue .step-desc{color:rgba(255,255,255,.65);}
+.step-blue .step-title{color:#fff;}
+.step-blue .step-url{color:#93C5FD;}
+.step-green{background:#16A34A;}
+.step-green .step-num,.step-green .step-desc{color:rgba(255,255,255,.65);}
+.step-green .step-title{color:#fff;}
+.step-red{background:#DC2626;}
+.step-red .step-num,.step-red .step-desc{color:rgba(255,255,255,.65);}
+.step-red .step-title{color:#fff;}
+.step-dark{background:#0F172A;border:1px solid rgba(255,255,255,.1);}
+.step-dark .step-num{color:rgba(255,255,255,.4);}
+.step-dark .step-title{color:#fff;}
+.step-dark .step-desc{color:rgba(255,255,255,.4);}
+.arrow-h{display:flex;align-items:center;padding:0 4px;flex-shrink:0;}
+.arrow-v{display:flex;justify-content:center;padding:4px 0;height:28px;}
+.ah{font-size:18px;color:rgba(255,255,255,.3);}
+.av{font-size:16px;color:rgba(255,255,255,.3);}
+.label{font-size:10px;font-weight:600;color:rgba(255,255,255,.4);white-space:nowrap;padding:0 3px;}
+.branch{display:flex;gap:16px;align-items:flex-start;margin:0;}
+.branch-col{display:flex;flex-direction:column;align-items:center;gap:0;}
+.condition{
+  background:#FEF3C7;border:1.5px dashed #F59E0B;border-radius:8px;
+  padding:8px 12px;font-size:11.5px;font-weight:600;color:#78350F;
+  text-align:center;min-width:140px;
+}
+.section-label{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(29,78,216,.14);border:1px solid rgba(29,78,216,.28);
+  border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;
+  color:#60A5FA;letter-spacing:.07em;text-transform:uppercase;
+  margin:20px 0 12px;
+}
+.connector{width:2px;background:rgba(255,255,255,.12);height:24px;margin:0 auto;}
+.hconnector{height:2px;background:rgba(255,255,255,.12);flex:1;min-width:12px;}
+.phase{
+  border:1px solid rgba(255,255,255,.07);border-radius:14px;
+  padding:20px;margin-bottom:4px;background:rgba(255,255,255,.02);
+}
+.phase-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;}
+</style>
+</head>
+<body>
+<h1>AEOSpark — <span>User Flow Diagram</span></h1>
+<div class="sub">Complete user journey from landing page to retainer client. Every decision point, branch, and action shown.</div>
+
+<div class="flow">
+
+<!-- PHASE 1: ACQUISITION -->
+<div class="phase">
+<div class="phase-title">Phase 1 — Acquisition (Free Widget)</div>
+<div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;">
+
+  <div class="step step-blue">
+    <div class="step-num">Entry Point</div>
+    <div class="step-title">User lands on aeospark.com</div>
+    <div class="step-url">aeospark.com</div>
+    <div class="step-desc">Via LinkedIn post, Reddit, Product Hunt, Google, or referral</div>
+  </div>
+
+  <div class="arrow-h"><div class="ah">→</div></div>
+
+  <div class="step">
+    <div class="step-num">Action</div>
+    <div class="step-title">User enters company URL</div>
+    <div class="step-desc">Types or pastes any URL into the widget input box. Clicks "Check My Score"</div>
+  </div>
+
+  <div class="arrow-h"><div class="ah">→</div></div>
+
+  <div class="step step-dark">
+    <div class="step-num">System — Background</div>
+    <div class="step-title">Crawl + Score Job Fires</div>
+    <div class="step-desc">Puppeteer crawls site. Claude API analyzes content. Score calculated across 6 dimensions. Takes 3–8 sec.</div>
+  </div>
+
+  <div class="arrow-h"><div class="ah">→</div></div>
+
+  <div class="step step-blue">
+    <div class="step-num">Screen 2</div>
+    <div class="step-title">Score Results Page</div>
+    <div class="step-url">/score?url=...</div>
+    <div class="step-desc">Score 0–100 shown. 6 sub-scores. 3 free recommendations. Blurred recs 4–10.</div>
+  </div>
+
+</div>
+</div>
+
+<div class="connector"></div>
+
+<!-- PHASE 2: LEAD CAPTURE -->
+<div class="phase">
+<div class="phase-title">Phase 2 — Lead Capture (Email Gate)</div>
+<div style="display:flex;gap:16px;align-items:flex-start;">
+
+  <div style="display:flex;flex-direction:column;align-items:center;">
+    <div class="condition">User sees score<br>Does user enter email?</div>
+    <div style="display:flex;gap:32px;margin-top:8px;align-items:flex-start;">
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+        <div style="font-size:10px;font-weight:700;color:#16A34A;margin-bottom:6px;">YES — Enters email</div>
+        <div class="step step-green">
+          <div class="step-num">System</div>
+          <div class="step-title">Store email in Supabase</div>
+          <div class="step-desc">Save to leads table. Send 3-page PDF summary via Resend. Set localStorage flag for domain. Reveal all 10 recs.</div>
+        </div>
+        <div class="connector"></div>
+        <div class="step">
+          <div class="step-num">Automated Email (T+0)</div>
+          <div class="step-title">PDF Summary + Audit CTA</div>
+          <div class="step-desc">Subject: "Your AEO Score is 31/100 — here's what to fix first". Contains 3-page PDF + link to buy full audit.</div>
+        </div>
+        <div class="connector"></div>
+        <div class="step step-dark">
+          <div class="step-num">Automated Email (T+48hrs)</div>
+          <div class="step-title">Follow-up nudge</div>
+          <div class="step-desc">"Still thinking about your AEO Score? Here's what your top competitor is doing differently." + audit CTA.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+        <div style="font-size:10px;font-weight:700;color:#DC2626;margin-bottom:6px;">NO — Ignores gate</div>
+        <div class="step step-red">
+          <div class="step-num">Outcome</div>
+          <div class="step-title">Sees blurred recs</div>
+          <div class="step-desc">Can still see score + first 3 recs. Share button still works. May return later. No re-targeting in v1.</div>
+        </div>
+        <div class="connector"></div>
+        <div class="step">
+          <div class="step-num">Possible Action</div>
+          <div class="step-title">Shares score on LinkedIn</div>
+          <div class="step-desc">Click "Share on LinkedIn" — auto-generates image card with score. Opens LinkedIn share dialog. Brings new users back to site.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="connector"></div>
+
+<!-- PHASE 3: CONVERSION -->
+<div class="phase">
+<div class="phase-title">Phase 3 — Conversion (Paid Audit $2,500)</div>
+<div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;">
+
+  <div class="step">
+    <div class="step-num">CTA Click</div>
+    <div class="step-title">User clicks "Get Full $2,500 Audit"</div>
+    <div class="step-desc">From score results page, email, or LinkedIn. URL, email pre-filled in checkout.</div>
+  </div>
+
+  <div class="arrow-h"><div class="ah">→</div></div>
+
+  <div class="step step-blue">
+    <div class="step-num">Screen 3</div>
+    <div class="step-title">Stripe Checkout Page</div>
+    <div class="step-url">/checkout/audit</div>
+    <div class="step-desc">Name, email, website, Stripe Payment Element. Single pay button. 2-col layout.</div>
+  </div>
+
+  <div class="arrow-h"><div class="ah">→</div></div>
+
+  <div style="display:flex;flex-direction:column;gap:0;align-items:center;">
+    <div class="condition">Payment succeeds?</div>
+    <div style="display:flex;gap:24px;margin-top:8px;align-items:flex-start;">
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+        <div style="font-size:10px;font-weight:700;color:#16A34A;margin-bottom:6px;">YES — Payment success</div>
+        <div class="step step-green">
+          <div class="step-num">Webhook fires</div>
+          <div class="step-title">payment_intent.succeeded</div>
+          <div class="step-desc">Store order in Supabase. Fire Inngest "audit.requested" event. Send confirmation email. Redirect to /confirmation.</div>
+        </div>
+        <div class="connector"></div>
+        <div class="step step-blue">
+          <div class="step-num">Screen 5</div>
+          <div class="step-title">Confirmation Page</div>
+          <div class="step-url">/confirmation?order=...</div>
+          <div class="step-desc">Success message, what happens next steps, Calendly booking button.</div>
+        </div>
+        <div class="connector"></div>
+        <div class="step step-dark">
+          <div class="step-num">Background Job (Inngest)</div>
+          <div class="step-title">Audit pipeline runs</div>
+          <div class="step-desc">Deep crawl 50 pages. Run 25 AI queries via Anthropic + OpenAI APIs. Competitor analysis. Claude writes report. PDF generated. Email sent within 24hrs.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+        <div style="font-size:10px;font-weight:700;color:#DC2626;margin-bottom:6px;">NO — Card declined</div>
+        <div class="step step-red">
+          <div class="step-num">Stripe handles</div>
+          <div class="step-title">Inline error shown</div>
+          <div class="step-desc">Stripe Payment Element shows error inline. User can retry with different card. No page reload needed.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="connector"></div>
+
+<!-- PHASE 4: RETAINER -->
+<div class="phase">
+<div class="phase-title">Phase 4 — Strategy Call → Retainer Pitch</div>
+<div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;">
+
+  <div class="step">
+    <div class="step-num">Action (T+0 to T+7 days)</div>
+    <div class="step-title">User books strategy call via Calendly</div>
+    <div class="step-desc">30-min call. Founder walks through audit findings. Shows competitor gap. Pitches implementation retainer.</div>
+  </div>
+
+  <div class="arrow-h"><div class="ah">→</div></div>
+
+  <div style="display:flex;flex-direction:column;gap:0;align-items:center;">
+    <div class="condition">User wants implementation?</div>
+    <div style="display:flex;gap:24px;margin-top:8px;align-items:flex-start;">
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+        <div style="font-size:10px;font-weight:700;color:#16A34A;margin-bottom:6px;">YES → Retainer client</div>
+        <div class="step step-green">
+          <div class="step-num">Stripe Subscription</div>
+          <div class="step-title">$3K–$8K/mo retainer</div>
+          <div class="step-desc">Send Stripe payment link. On success → onboard to Slack channel, set up Supabase client record, begin Month 1 sprint.</div>
+        </div>
+        <div class="connector"></div>
+        <div class="step step-blue">
+          <div class="step-num">Ongoing Monthly</div>
+          <div class="step-title">Implementation + Monthly Report</div>
+          <div class="step-desc">Week 1: citation audit. Week 1–2: implementation sprint. Week 3: content. Week 4: verification + report. Repeat.</div>
+        </div>
+        <div class="connector"></div>
+        <div class="step step-dark">
+          <div class="step-num">Month 4+ (5 clients)</div>
+          <div class="step-title">Build Monitor Dashboard</div>
+          <div class="step-url">app.aeospark.com</div>
+          <div class="step-desc">NOW build Screen 4. Give retainer clients self-serve access to their Citation Share data. Reduces manual reporting time.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">NO → DIY with roadmap</div>
+        <div class="step">
+          <div class="step-num">Outcome</div>
+          <div class="step-title">Customer implements themselves</div>
+          <div class="step-desc">They have the 90-day roadmap from the audit. Follow up at Day 30 and Day 60 with "How's it going?" — these often convert later.</div>
+        </div>
+        <div class="connector"></div>
+        <div class="step step-dark">
+          <div class="step-num">Re-engagement (Day 60)</div>
+          <div class="step-title">Offer Monitor subscription</div>
+          <div class="step-desc">They've been implementing. Now offer the $499/mo Monitor to track their progress. High-intent buyers — they already paid $2,500.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- KEY DATA FLOWS -->
+<div style="margin-top:28px;">
+<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;">Key Data Flows — What Goes Where</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;">
+    <div style="font-size:12px;font-weight:700;color:#60A5FA;margin-bottom:10px;">📦 Supabase Tables</div>
+    <div style="font-size:11.5px;color:rgba(255,255,255,.5);line-height:2;">
+      <strong style="color:rgba(255,255,255,.7)">scores</strong> — url, score_json, created_at<br>
+      <strong style="color:rgba(255,255,255,.7)">leads</strong> — email, url, score, source<br>
+      <strong style="color:rgba(255,255,255,.7)">orders</strong> — email, url, stripe_id, status<br>
+      <strong style="color:rgba(255,255,255,.7)">clients</strong> — email, plan, api_keys_encrypted<br>
+      <strong style="color:rgba(255,255,255,.7)">citation_results</strong> — client_id, query, platform, cited, sentiment, date<br>
+      <strong style="color:rgba(255,255,255,.7)">citation_share</strong> — client_id, date, share_pct
+    </div>
+  </div>
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;">
+    <div style="font-size:12px;font-weight:700;color:#34D399;margin-bottom:10px;">⚡ Inngest Jobs</div>
+    <div style="font-size:11.5px;color:rgba(255,255,255,.5);line-height:2;">
+      <strong style="color:rgba(255,255,255,.7)">score.requested</strong> — triggered on URL submit<br>
+      <strong style="color:rgba(255,255,255,.7)">audit.requested</strong> — triggered on payment<br>
+      <strong style="color:rgba(255,255,255,.7)">audit.completed</strong> — triggers PDF email<br>
+      <strong style="color:rgba(255,255,255,.7)">citations.daily</strong> — 3am UTC, all clients<br>
+      <strong style="color:rgba(255,255,255,.7)">alert.citation_drop</strong> — fires if share drops 10%+
+    </div>
+  </div>
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;">
+    <div style="font-size:12px;font-weight:700;color:#FBBF24;margin-bottom:10px;">📧 Resend Emails</div>
+    <div style="font-size:11.5px;color:rgba(255,255,255,.5);line-height:2;">
+      <strong style="color:rgba(255,255,255,.7)">welcome-pdf</strong> — after email gate submit<br>
+      <strong style="color:rgba(255,255,255,.7)">follow-up-48h</strong> — 48hrs after email capture<br>
+      <strong style="color:rgba(255,255,255,.7)">audit-confirmation</strong> — immediately on payment<br>
+      <strong style="color:rgba(255,255,255,.7)">audit-delivered</strong> — when PDF is ready<br>
+      <strong style="color:rgba(255,255,255,.7)">monthly-report</strong> — retainer clients, monthly<br>
+      <strong style="color:rgba(255,255,255,.7)">citation-alert</strong> — when share drops 10%+
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</body>
+</html>

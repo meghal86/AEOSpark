@@ -13,50 +13,46 @@ export function AuditCheckoutForm(props: {
   const router = useRouter();
   const [name, setName] = useState(props.defaultName);
   const [email, setEmail] = useState(props.defaultEmail);
-  const [companyName, setCompanyName] = useState(props.companyName);
   const [website, setWebsite] = useState(props.website);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const buyerQuestions = [
+    "Which prompts are we currently losing to competitors?",
+    "Which pages need to change first to increase citations?",
+    "What should the team do in the next 30, 60, and 90 days?",
+  ];
 
-  async function submit(status: "paid" | "failed") {
+  async function submit() {
     setError("");
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/orders", {
+      const response = await fetch("/api/stripe/create-checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          companyName,
           email,
           name,
           scoreId: props.scoreId,
-          status,
-          website,
+          url: website,
         }),
       });
 
       const payload = (await response.json()) as {
+        data?: { checkoutUrl?: string };
         error?: string;
-        orderId?: string;
       };
 
-      if (!response.ok || !payload.orderId) {
+      if (!response.ok || !payload.data?.checkoutUrl) {
         throw new Error(payload.error || "Checkout failed.");
       }
 
-      if (status === "paid") {
-        router.push(`/confirmation?order=${payload.orderId}`);
-      } else {
-        setError(
-          "Card declined. This is the mock failure path from the user flow. No page reload required.",
-        );
-      }
+      router.push(payload.data.checkoutUrl);
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Unable to create the order.",
+          : "Unable to start checkout.",
       );
     } finally {
       setIsSubmitting(false);
@@ -64,79 +60,146 @@ export function AuditCheckoutForm(props: {
   }
 
   return (
-    <section className="grid gap-5 rounded-[2rem] border border-white/10 bg-slate-950/70 p-6 backdrop-blur">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
-          Screen 3
-        </p>
-        <h2 className="mt-2 text-2xl font-semibold text-white">
-          Audit checkout
-        </h2>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-slate-100/88">
-          One payment. Audit delivered within 24 hours.
-        </p>
-      </div>
+    <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+      <div className="surface-panel relative grid gap-5 rounded-[2.2rem] p-6 lg:p-7">
+        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(124,85,68,0.4)] to-transparent" />
+        <div>
+          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
+            Buyer details
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold text-stone-950">
+            Get your AI visibility audit
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-700">
+            This purchase unlocks the exact prompts, competitor examples, and
+            implementation priorities behind the score.
+          </p>
+        </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="grid gap-3">
+          <label className="grid gap-2 text-sm font-semibold text-stone-800">
+            Full name
           <input
-            className="h-12 rounded-2xl border border-white/10 bg-slate-950/70 px-4 text-sm text-white outline-none focus:border-sky-400"
+            className="input-field h-14 rounded-[1.35rem] px-4 text-sm"
             onChange={(event) => setName(event.target.value)}
             placeholder="Buyer name"
             value={name}
           />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-stone-800">
+            Work email
           <input
-            className="h-12 rounded-2xl border border-white/10 bg-slate-950/70 px-4 text-sm text-white outline-none focus:border-sky-400"
+            className="input-field h-14 rounded-[1.35rem] px-4 text-sm"
             onChange={(event) => setEmail(event.target.value)}
             placeholder="Business email"
             type="email"
             value={email}
           />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-stone-800">
+            Website to audit
           <input
-            className="h-12 rounded-2xl border border-white/10 bg-slate-950/70 px-4 text-sm text-white outline-none focus:border-sky-400"
-            onChange={(event) => setCompanyName(event.target.value)}
-            placeholder="Company name"
-            value={companyName}
-          />
-          <input
-            className="h-12 rounded-2xl border border-white/10 bg-slate-950/70 px-4 text-sm text-white outline-none focus:border-sky-400"
+            className="input-field h-14 rounded-[1.35rem] px-4 text-sm"
             onChange={(event) => setWebsite(event.target.value)}
             placeholder="Website"
             value={website}
           />
+          </label>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <button
-              className="inline-flex h-12 items-center justify-center rounded-2xl bg-white text-sm font-bold text-slate-950 shadow-[0_12px_35px_rgba(255,255,255,0.16)] transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={isSubmitting}
-              onClick={() => submit("paid")}
-              type="button"
-            >
-              {isSubmitting ? "Processing..." : "Pay $2,500"}
-            </button>
-            <button
-              className="inline-flex h-12 items-center justify-center rounded-2xl border border-rose-400/30 bg-rose-500/10 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={isSubmitting}
-              onClick={() => submit("failed")}
-              type="button"
-            >
-              Simulate declined card
-            </button>
-          </div>
+          <button
+            className="btn-primary mt-1 inline-flex h-14 items-center justify-center rounded-[1.35rem] text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isSubmitting}
+            onClick={() => submit()}
+            type="button"
+          >
+            {isSubmitting ? "Redirecting..." : "Get My Full Audit"}
+          </button>
 
-          {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+          {error ? <p className="status-danger text-sm">{error}</p> : null}
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-slate-950/50 p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300/80">
-            Included
+        <div className="surface-card grid gap-3 rounded-[1.8rem] p-5">
+          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em]">
+            Payment area
           </p>
-          <ul className="mt-4 grid gap-3 text-sm leading-6 text-slate-100/88">
-            <li>50-page crawl</li>
-            <li>25-query citation baseline</li>
-            <li>Competitor comparison</li>
-            <li>Audit PDF + strategy call</li>
+          <div className="rounded-[1.4rem] border border-[rgba(72,52,40,0.12)] bg-[rgba(255,252,247,0.72)] px-4 py-6 text-sm leading-6 text-stone-700">
+            Card entry, Apple Pay, and Google Pay are handled by Stripe-hosted
+            Checkout after you submit this form.
+          </div>
+          <div className="ui-chip rounded-[1.2rem] px-4 py-3 text-sm font-semibold">
+            SSL secured checkout
+          </div>
+        </div>
+
+        <div className="surface-card grid gap-3 rounded-[1.8rem] p-5">
+          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em]">
+            What leadership gets answered
+          </p>
+          <div className="grid gap-2 text-sm leading-7 text-stone-700">
+            {buyerQuestions.map((question) => (
+              <p key={question}>• {question}</p>
+            ))}
+          </div>
+        </div>
+
+        <p className="max-w-xl text-xs leading-6 text-stone-600">
+          Stripe handles payment security. AEOSpark only collects the audit
+          details needed to create the checkout session.
+        </p>
+      </div>
+
+      <div className="grid gap-4">
+        <div className="surface-card rounded-[1.8rem] p-5">
+          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em]">
+            Order summary
+          </p>
+          <div className="mt-4 grid gap-3 text-sm text-stone-700">
+            <div className="flex items-center justify-between gap-3">
+              <span>Full AEO Audit</span>
+              <span className="font-semibold text-stone-950">$997</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span>Final report</span>
+              <span>Within 24hrs</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span>Tax</span>
+              <span>$0</span>
+            </div>
+            <div className="border-t border-[rgba(72,52,40,0.1)] pt-3 flex items-center justify-between gap-3">
+              <span className="font-semibold text-stone-950">Total</span>
+              <span className="text-lg font-bold text-stone-950">$997</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="surface-card rounded-[1.8rem] p-5">
+          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em]">
+            What&apos;s included
+          </p>
+          <ul className="mt-4 grid gap-3 text-sm leading-6 text-stone-700">
+            <li>✓ Executive PDF audit with buyer-intent query findings</li>
+            <li>✓ Citation baseline across major AI assistants</li>
+            <li>✓ Named competitor comparison with proof excerpts</li>
+            <li>✓ Highest-impact fixes ranked by expected impact</li>
+            <li>✓ 30/60/90-day implementation roadmap</li>
+            <li>✓ 30-minute strategy call after delivery</li>
           </ul>
+          <p className="mt-4 text-xs leading-6 text-stone-600">
+            This is not the score page repackaged. The deliverable is a separate
+            report with prompt-by-prompt findings, competitor examples, and a
+            ranked implementation plan.
+          </p>
+        </div>
+
+        <div className="surface-card rounded-[1.8rem] p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
+            Audit guarantee
+          </p>
+          <div className="mt-4 rounded-[1.4rem] border border-emerald-200/80 bg-[rgba(232,247,240,0.92)] px-4 py-4 text-sm leading-7 text-emerald-900">
+            If this audit does not show you at least three specific, actionable
+            changes to improve AI visibility, we will refund you in full.
+          </div>
         </div>
       </div>
     </section>

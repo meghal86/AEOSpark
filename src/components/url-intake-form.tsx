@@ -13,49 +13,50 @@ export function UrlIntakeForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    setIsPending(true);
 
     try {
-      const response = await fetch("/api/score", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          url,
-          competitorUrl: competitorUrl || undefined,
-        }),
-      });
-
-      const payload = (await response.json()) as {
-        error?: string;
-        scoreId?: string;
-      };
-
-      if (!response.ok || !payload.scoreId) {
-        throw new Error(payload.error || "Unable to score the supplied site.");
+      const normalized = new URL(
+        url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`,
+      );
+      setIsPending(true);
+      const params = new URLSearchParams({ url: normalized.toString() });
+      if (competitorUrl.trim()) {
+        const normalizedCompetitor = new URL(
+          competitorUrl.startsWith("http://") || competitorUrl.startsWith("https://")
+            ? competitorUrl
+            : `https://${competitorUrl}`,
+        );
+        params.set("competitor", normalizedCompetitor.toString());
       }
-
-      router.push(`/score/${payload.scoreId}`);
+      router.push(`/score?${params.toString()}`);
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
-          ? caughtError.message
-          : "Something went wrong while running the AEO scan.",
+          ? "Enter a valid public website URL."
+          : "Something went wrong while preparing the AEO scan.",
       );
-    } finally {
       setIsPending(false);
     }
   }
 
   return (
     <form
-      className="grid gap-4 rounded-[2rem] border border-white/14 bg-slate-950/70 p-5 shadow-[0_30px_120px_rgba(8,14,26,0.65)] backdrop-blur"
+      className="surface-card grid gap-5 rounded-[2rem] p-5 shadow-[0_30px_100px_rgba(83,61,47,0.08)]"
       onSubmit={handleSubmit}
     >
+      <div>
+        <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
+          Instant AEO check
+        </p>
+        <p className="mt-2 text-sm text-stone-700">
+          Paste a site. We return the score, gaps, and next move.
+        </p>
+      </div>
       <div className="grid gap-3 md:grid-cols-[1.4fr_1fr]">
         <label className="grid gap-2">
-          <span className="text-sm font-semibold text-white">Primary company URL</span>
+          <span className="text-sm font-semibold text-stone-900">Primary company URL</span>
           <input
-            className="h-14 rounded-2xl border border-white/10 bg-slate-950/70 px-4 text-sm text-white outline-none transition focus:border-sky-400"
+            className="input-field h-14 rounded-2xl px-4 text-sm transition"
             placeholder="https://yourcompany.com"
             value={url}
             onChange={(event) => setUrl(event.target.value)}
@@ -64,11 +65,11 @@ export function UrlIntakeForm() {
         </label>
 
         <label className="grid gap-2">
-          <span className="text-sm font-semibold text-white">
+          <span className="text-sm font-semibold text-stone-900">
             Optional competitor URL
           </span>
           <input
-            className="h-14 rounded-2xl border border-white/10 bg-slate-950/70 px-4 text-sm text-white outline-none transition focus:border-sky-400"
+            className="input-field h-14 rounded-2xl px-4 text-sm transition"
             placeholder="https://competitor.com"
             value={competitorUrl}
             onChange={(event) => setCompetitorUrl(event.target.value)}
@@ -77,19 +78,19 @@ export function UrlIntakeForm() {
       </div>
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="text-sm text-slate-100/88">
-          Results usually return in under 20 seconds.
+        <div className="text-sm text-stone-700">
+          Results usually return in under 60 seconds.
         </div>
         <button
-          className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-300 px-6 text-sm font-bold text-slate-950 shadow-[0_18px_50px_rgba(56,189,248,0.28)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+          className="btn-primary inline-flex h-14 items-center justify-center rounded-2xl px-6 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isPending}
           type="submit"
         >
-          {isPending ? "Scoring site..." : "Check My Score"}
+          {isPending ? "Opening score..." : "Check My Score"}
         </button>
       </div>
 
-      {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+      {error ? <p className="status-danger text-sm">{error}</p> : null}
     </form>
   );
 }

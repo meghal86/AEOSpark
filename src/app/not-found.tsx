@@ -3,22 +3,30 @@ import Link from "next/link";
 export default function NotFound() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col items-center justify-center gap-6 px-6 text-center">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300/80">
+      <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
         AEOSpark
       </p>
-      <h1 className="text-4xl font-semibold tracking-tight text-white">
+      <h1 className="text-4xl font-semibold tracking-tight text-stone-950">
         The requested record could not be found.
       </h1>
-      <p className="max-w-2xl text-base leading-7 text-slate-100/88">
-        If you refreshed a score or order from a different environment, it may not
-        exist in the local JSON store yet.
+      <p className="max-w-2xl text-base leading-7 text-stone-700">
+        This score or report link may have expired, or the record is no longer
+        available. Run a new score to get started again.
       </p>
-      <Link
-        className="inline-flex h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-bold text-slate-950 shadow-[0_12px_35px_rgba(255,255,255,0.16)] transition hover:bg-sky-100"
-        href="/"
-      >
-        Back to home
-      </Link>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Link
+          className="btn-primary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-bold transition"
+          href="/"
+        >
+          Run a new score
+        </Link>
+        <Link
+          className="btn-secondary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
+          href="/"
+        >
+          Back to home
+        </Link>
+      </div>
     </main>
   );
 }
