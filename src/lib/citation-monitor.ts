@@ -5,6 +5,31 @@ import { decryptSecret } from "@/lib/crypto";
 import { getClientById } from "@/lib/storage";
 import type { CitationQueryResult, CitationRunRecord } from "@/lib/types";
 
+function escapeRegExpChars(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildBrandPatterns(domain: string): RegExp[] {
+  const bare = domain.replace(/^www\./, "").toLowerCase();
+  const withoutTld = bare.split(".")[0];
+  const parts = withoutTld.split(/[-_]/).filter(Boolean);
+  const joined = parts.join("");
+  const spaced = parts.join(" ");
+  const camel = parts
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join("");
+
+  const variants = [...new Set([bare, withoutTld, joined, spaced, camel])];
+  return variants.map(
+    (v) => new RegExp(`\\b${escapeRegExpChars(v)}\\b`, "i"),
+  );
+}
+
+function isBrandCited(text: string, domain: string): boolean {
+  const patterns = buildBrandPatterns(domain);
+  return patterns.some((pattern) => pattern.test(text));
+}
+
 export async function runCitationCheck(
   clientId: string,
   query: string,
@@ -40,8 +65,8 @@ export async function runCitationCheck(
     const text = response.content
       .map((block) => ("text" in block ? block.text : ""))
       .join("\n");
-    const cited = text.toLowerCase().includes(client.website.toLowerCase()) ||
-      text.toLowerCase().includes(new URL(client.website).hostname.replace(/^www\./, "").toLowerCase());
+    const websiteHostname = new URL(client.website).hostname;
+    const cited = isBrandCited(text, websiteHostname);
 
     return {
       id: crypto.randomUUID(),
@@ -68,8 +93,8 @@ export async function runCitationCheck(
     messages: [{ role: "user", content: query }],
   });
   const text = response.choices[0]?.message?.content || "";
-  const cited = text.toLowerCase().includes(client.website.toLowerCase()) ||
-    text.toLowerCase().includes(new URL(client.website).hostname.replace(/^www\./, "").toLowerCase());
+  const websiteHostname = new URL(client.website).hostname;
+  const cited = isBrandCited(text, websiteHostname);
 
   return {
     id: crypto.randomUUID(),

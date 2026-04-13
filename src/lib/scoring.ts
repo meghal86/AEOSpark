@@ -45,10 +45,19 @@ type StructuredDataStats = {
   faqFound: boolean;
   productFound: boolean;
   softwareApplicationFound: boolean;
+  websiteFound: boolean;
   microdataFound: boolean;
   score: number;
   pageCount: number;
   discoveredTypes: string[];
+};
+
+type CitabilityBlockStats = {
+  averageParagraphWords: number;
+  optimalParagraphCount: number;
+  sampledParagraphCount: number;
+  strongestPassagePreview: string;
+  strongestPassageWords: number;
 };
 
 const USER_AGENT =
@@ -201,16 +210,23 @@ function analyzeStructuredData(homepageHtml: string, pages: CrawlPage[]) {
       !/Product/i.test(type),
   );
 
+  const websiteFound = types.some((type) => /WebSite/i.test(type));
+
   let score = 0;
   if (faqFound) score += 8;
-  if (organizationFound) score += 6;
+  if (organizationFound) score += 5;
   if (softwareApplicationFound || productFound) score += 4;
-  if (!faqFound && !organizationFound && !softwareApplicationFound && !productFound && otherTypes.length) {
+  if (websiteFound) score += 1;
+  // Breadth bonus: structured data present on multiple pages
+  if (pageCount >= 2) score += 2;
+  if (!faqFound && !organizationFound && !softwareApplicationFound && !productFound && !websiteFound && otherTypes.length) {
     score += 2;
   }
   if (score === 0 && microdataFound) {
     score += 2;
   }
+  // Cap at the dimension weight
+  score = Math.min(score, 20);
 
   return {
     discoveredTypes: types,
@@ -222,6 +238,7 @@ function analyzeStructuredData(homepageHtml: string, pages: CrawlPage[]) {
     productFound,
     score,
     softwareApplicationFound,
+    websiteFound,
   } satisfies StructuredDataStats;
 }
 
@@ -326,7 +343,95 @@ function answerFirstParagraphScore(
   return {
     matched: hasSentence && !startsBadly,
     paragraph: firstParagraph,
+    wordCount: words.length,
   };
+}
+
+function countWords(value: string) {
+  return normalizeWhitespace(value)
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+function paragraphDirectnessScore(paragraph: string, domain: string) {
+  const lower = paragraph.toLowerCase();
+  const companyName = domain.split(".")[0].toLowerCase();
+  let score = 0;
+
+  if (/\b(is|helps|lets|gives|allows|provides|shows|tracks|measures)\b/.test(lower)) {
+    score += 2;
+  }
+  if (/[0-9%$]/.test(lower)) {
+    score += 1;
+  }
+  if (/\b(why|how|what|best|compare|pricing|review|alternative|vs)\b/.test(lower)) {
+    score += 1;
+  }
+  if (lower.startsWith("we are") || lower.startsWith("welcome") || lower.startsWith(companyName)) {
+    score -= 2;
+  }
+
+  return score;
+}
+
+function analyzeCitabilityBlocks(
+  homepageHtml: string,
+  pages: CrawlPage[],
+  domain: string,
+) {
+  const htmlSamples = [homepageHtml, ...pages.slice(0, 3).map((page) => page.html)];
+  const paragraphs = unique(
+    htmlSamples.flatMap((html) => {
+      const $ = load(html);
+      return $("p")
+        .toArray()
+        .map((entry) => normalizeWhitespace($(entry).text()))
+        .filter((paragraph) => paragraph.length >= 80);
+    }),
+  );
+
+  if (!paragraphs.length) {
+    return {
+      averageParagraphWords: 0,
+      optimalParagraphCount: 0,
+      sampledParagraphCount: 0,
+      strongestPassagePreview: "",
+      strongestPassageWords: 0,
+    } satisfies CitabilityBlockStats;
+  }
+
+  const scored = paragraphs.map((paragraph) => {
+    const words = countWords(paragraph);
+    const optimalDistance = Math.min(Math.abs(words - 134), Math.abs(words - 167));
+    return {
+      paragraph,
+      words,
+      directness: paragraphDirectnessScore(paragraph, domain),
+      optimal: words >= 134 && words <= 167,
+      optimalDistance,
+    };
+  });
+
+  scored.sort((left, right) => {
+    if (left.optimal !== right.optimal) {
+      return left.optimal ? -1 : 1;
+    }
+    if (left.directness !== right.directness) {
+      return right.directness - left.directness;
+    }
+    return left.optimalDistance - right.optimalDistance;
+  });
+
+  const totalWords = scored.reduce((sum, item) => sum + item.words, 0);
+  const strongest = scored[0];
+
+  return {
+    averageParagraphWords: Math.round(totalWords / scored.length),
+    optimalParagraphCount: scored.filter((item) => item.optimal).length,
+    sampledParagraphCount: scored.length,
+    strongestPassagePreview: strongest?.paragraph || "",
+    strongestPassageWords: strongest?.words || 0,
+  } satisfies CitabilityBlockStats;
 }
 
 async function fetchText(url: string) {
@@ -799,7 +904,7 @@ function evidenceForDimension(
       ];
     case "content_arch":
       return [
-        "Checked the first paragraph, heading hierarchy, FAQ density, and comparison-table presence.",
+        "Checked the first paragraph, heading hierarchy, FAQ density, comparison-table presence, and whether answer blocks fit the 134–167 word citability window.",
         `Scanned the homepage plus ${Math.min(crawlResult.pages.length, 3)} additional linked pages for answer structure.`,
       ];
     case "pricing":
@@ -838,6 +943,7 @@ export async function scoreUrl(crawlResult: CrawlResult): Promise<ScoreResult> {
   const crawlerAccessScore = allowedBots.length * 3 + (crawlResult.hasLlmsTxt ? 3 : 0);
 
   const answerFirst = answerFirstParagraphScore(crawlResult.html, domain);
+  const citability = analyzeCitabilityBlocks(crawlResult.html, crawlResult.pages, domain);
   const h2Count = $("h2").length;
   const h3Count = $("h3").length;
   const faqPairs = countFaqPairs(crawlResult.html, crawlResult.pages, structuredData);
@@ -847,7 +953,8 @@ export async function scoreUrl(crawlResult: CrawlResult): Promise<ScoreResult> {
     crawlResult.pages.some((page) => /compar/i.test(page.html) || load(page.html)("table").length > 0);
 
   let contentArchScore = 0;
-  if (answerFirst.matched) contentArchScore += 6;
+  if (answerFirst.matched) contentArchScore += 4;
+  if (citability.optimalParagraphCount > 0) contentArchScore += 2;
   if (h2Count > 0 && h3Count > 0) contentArchScore += 4;
   if (faqPairs >= 30) contentArchScore += 6;
   else if (faqPairs >= 15) contentArchScore += 4;
@@ -890,13 +997,17 @@ export async function scoreUrl(crawlResult: CrawlResult): Promise<ScoreResult> {
               structuredData.organizationFound ? "Organization" : null,
               structuredData.softwareApplicationFound ? "SoftwareApplication" : null,
               structuredData.productFound ? "Product" : null,
+              structuredData.websiteFound ? "WebSite" : null,
               structuredData.microdataFound ? "Schema.org microdata/meta tags" : null,
               ...structuredData.otherTypes,
             ]
               .filter(Boolean)
               .join(", ")} across ${structuredData.pageCount} page${structuredData.pageCount === 1 ? "" : "s"}. Structured data scored ${structuredData.score}/20.`
           : "No parseable JSON-LD schema or schema.org-style microdata was found across the homepage and sampled commercial pages, so AI systems have little machine-readable product or entity context.",
-      content_arch: `First paragraph ${answerFirst.matched ? "is" : "is not"} answer-first. Found ${h2Count} H2 tags, ${h3Count} H3 tags, approximately ${faqPairs} FAQ-style pairs, and ${hasComparisonTable ? "a" : "no"} comparison table, for ${contentArchScore}/20.`,
+      content_arch:
+        citability.sampledParagraphCount > 0
+          ? `AI-cited answer blocks tend to work best around 134–167 words. ${domain} sampled ${citability.sampledParagraphCount} body paragraphs with an average length of ${citability.averageParagraphWords} words; the strongest direct-answer passage is ${citability.strongestPassageWords} words${citability.optimalParagraphCount > 0 ? " and falls inside" : " and falls outside"} that citability window. First paragraph ${answerFirst.matched ? "is" : "is not"} answer-first. Found ${h2Count} H2 tags, ${h3Count} H3 tags, approximately ${faqPairs} FAQ-style pairs, and ${hasComparisonTable ? "a" : "no"} comparison table, for ${contentArchScore}/20.`
+          : `AI-cited answer blocks tend to work best around 134–167 words, but AEOSpark could not find enough usable body paragraphs to assess that on ${domain}. First paragraph ${answerFirst.matched ? "is" : "is not"} answer-first. Found ${h2Count} H2 tags, ${h3Count} H3 tags, approximately ${faqPairs} FAQ-style pairs, and ${hasComparisonTable ? "a" : "no"} comparison table, for ${contentArchScore}/20.`,
       pricing:
         pricing.accessiblePage && !pricing.blockedByContactOnly
           ? `Public pricing page found at ${pricing.accessiblePage}. ${/[$€£]|per month|per year/.test(pricing.pricingText) ? "Explicit price language is visible." : "No explicit dollar amount is visible."} ${pricing.hasFreeTrial ? "Free-trial language is present." : "No free-trial language was found."}`

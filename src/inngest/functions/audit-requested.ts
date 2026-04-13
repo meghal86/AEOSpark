@@ -7,6 +7,7 @@ import { sendAuditDeliveredEmail } from "@/lib/email-workflows";
 import { appEnv, assertPaidDeliveryConfig, isProductionEnv } from "@/lib/env";
 import { renderAuditDeliveryPdf, type AuditReportData } from "@/lib/pdf-documents";
 import { prisma } from "@/lib/prisma";
+import { buildSchemaTemplates } from "@/lib/schema-templates";
 import { createServerClient } from "@/lib/supabase";
 import { getOrderById, updateOrderDelivery } from "@/lib/storage";
 import type { AuditFix, AuditRecord, CitationQueryResult } from "@/lib/types";
@@ -14,6 +15,10 @@ import type { AuditFix, AuditRecord, CitationQueryResult } from "@/lib/types";
 type ProviderResult = {
   cited: boolean;
   competitor_cited: string | null;
+  /** All brands mentioned in the response, ordered by first appearance. */
+  all_brands: string[];
+  /** Position of the target brand (1-indexed) in all_brands, or 0 if not cited. */
+  target_position: number;
   sentiment: string;
   excerpt: string;
 };
@@ -32,39 +37,41 @@ type ReportSections = {
 };
 
 const COMPETITOR_STOP_WORDS = new Set([
-  "A",
-  "An",
-  "And",
-  "Based",
-  "Best",
-  "Compare",
-  "For",
-  "Here",
-  "How",
-  "However",
-  "I",
-  "If",
-  "In",
-  "It",
-  "Many",
-  "Most",
-  "Our",
-  "Some",
-  "That",
-  "The",
-  "There",
-  "These",
-  "They",
-  "This",
-  "Those",
-  "Top",
-  "Typically",
-  "We",
-  "What",
-  "When",
-  "While",
-  "You",
+  // Determiners / pronouns / conjunctions
+  "A", "An", "And", "As", "At", "Be", "But", "By", "Do", "For", "From",
+  "Has", "Have", "He", "Her", "Here", "His", "How", "However", "I", "If",
+  "In", "Into", "Is", "It", "Its", "Let", "Many", "May", "Me", "More",
+  "Most", "Much", "My", "No", "Nor", "Not", "Of", "On", "One", "Or",
+  "Our", "Out", "Own", "She", "So", "Some", "Such", "Than", "That",
+  "The", "Their", "Them", "Then", "There", "These", "They", "This",
+  "Those", "To", "Too", "Up", "Us", "Very", "Was", "We", "Were", "What",
+  "When", "Which", "While", "Who", "Why", "Will", "With", "Would", "You",
   "Your",
+  // Common English words that get capitalized at sentence start
+  "About", "After", "Again", "Also", "Always", "Another", "Any", "Are",
+  "Available", "Based", "Because", "Been", "Before", "Being", "Below",
+  "Best", "Better", "Between", "Both", "Can", "Choose", "Common",
+  "Compare", "Consider", "Could", "Different", "Each", "Either", "Even",
+  "Every", "Example", "Feature", "Features", "Find", "First", "Five",
+  "Four", "Free", "Get", "Given", "Good", "Great", "Help", "Helps",
+  "High", "Important", "Include", "Includes", "Including", "Instead",
+  "Just", "Key", "Known", "Large", "Last", "Less", "Like", "Look",
+  "Looking", "Made", "Main", "Make", "Makes", "Making", "Need", "New",
+  "Next", "Note", "Now", "Number", "Offer", "Offers", "Often", "Only",
+  "Option", "Options", "Other", "Others", "Over", "Overall", "Part",
+  "Particular", "Particularly", "People", "Plan", "Plans", "Platform",
+  "Platforms", "Point", "Popular", "Price", "Pricing", "Provide",
+  "Provides", "Rather", "Right", "Same", "Several", "Should", "Simple",
+  "Since", "Small", "Software", "Solution", "Solutions", "Specifically",
+  "Start", "Still", "Strong", "Take", "Team", "Teams", "Three", "Through",
+  "Time", "Today", "Together", "Tool", "Tools", "Top", "Two", "Typically",
+  "Under", "Used", "Using", "Want", "Way", "Well", "Work", "Works",
+  // Business jargon capitalized words
+  "Advanced", "Analytics", "Application", "Automation", "Business",
+  "Cloud", "Customer", "Data", "Digital", "Enterprise", "Integration",
+  "Management", "Marketing", "Premium", "Professional", "Sales",
+  "Security", "Service", "Services", "Standard", "Support", "System",
+  "Technology", "Workflow",
 ]);
 
 const anthropic = appEnv.anthropicApiKey
@@ -81,6 +88,36 @@ function companyNameFromDomain(domain: string) {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function escapeRegExpChars(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Build word-boundary regex variants for a domain so we can match
+ * "HubSpot", "hubspot", "hubspot.com", "Hub Spot", etc.
+ */
+function buildBrandPatterns(domain: string): RegExp[] {
+  const bare = domain.replace(/^www\./, "").toLowerCase();
+  const withoutTld = bare.split(".")[0];
+  // Split on hyphens/underscores to handle domains like "hub-spot"
+  const parts = withoutTld.split(/[-_]/).filter(Boolean);
+  const joined = parts.join("");              // "hubspot"
+  const spaced = parts.join(" ");             // "hub spot"
+  const camel = parts
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join("");                                 // "HubSpot"
+
+  const variants = [...new Set([bare, withoutTld, joined, spaced, camel])];
+  return variants.map(
+    (v) => new RegExp(`\\b${escapeRegExpChars(v)}\\b`, "i"),
+  );
+}
+
+function isBrandCited(text: string, domain: string): boolean {
+  const patterns = buildBrandPatterns(domain);
+  return patterns.some((pattern) => pattern.test(text));
 }
 
 function extractAnthropicText(response: unknown) {
@@ -113,30 +150,36 @@ function safeJsonArray(input: string) {
   }
 }
 
-function getFallbackQueries(url: string) {
-  const domain = new URL(url).hostname.replace(/^www\./, "").toLowerCase();
-  const company = domain.split(".")[0];
+function getFallbackQueries(_url: string) {
+  // All queries are brand-neutral. The target company should only appear
+  // in AI responses if the model genuinely considers it relevant.
+  // Including the company name in queries inflates citation share and
+  // makes the measurement meaningless.
   return [
-    `What is ${company}?`,
-    `${company} reviews`,
-    `${company} pricing`,
-    `${company} alternatives`,
-    `Is ${company} legit?`,
-    `Best software like ${company}`,
-    `Top ${company} alternatives`,
-    `Compare ${company} with competitors`,
-    `${company} vs competitors`,
-    `Best tools for teams like ${company}`,
-    `Top platforms similar to ${company}`,
-    `Compare options in ${company}'s category`,
-    `Best software for growing companies`,
-    `Top tools for improving workflow efficiency`,
-    `Best platform for teams that need better automation`,
-    `How do I solve the problem ${company} addresses`,
-    `How do I improve this workflow without adding headcount`,
-    `How do I reduce manual work in this part of the business`,
-    `How do I compare vendors in this category`,
-    `What are the best tools for this problem in 2026`,
+    // Category / comparison queries (8)
+    "What are the best tools in this category for mid-size companies?",
+    "Compare the top platforms for this type of business problem",
+    "What software do most teams use for this type of work?",
+    "Which vendors are leading in this space right now?",
+    "Best alternatives when evaluating tools in this category",
+    "Top rated platforms for this use case according to analysts",
+    "Which tools have the strongest integrations in this space?",
+    "What platform do fast-growing companies pick for this?",
+    // Problem-based queries (6)
+    "How do I reduce manual work in this area of the business?",
+    "How do I improve efficiency in this workflow without adding headcount?",
+    "What is the best way to solve this problem for a 50-person team?",
+    "How do enterprises handle this challenge at scale?",
+    "What do consultants recommend for this type of project?",
+    "How do I evaluate vendors for this kind of platform?",
+    // Persona-based queries (4)
+    "What do marketing directors typically use for this?",
+    "What do CTOs recommend for solving this problem?",
+    "What do agencies use to manage this for their clients?",
+    "What platform do startups choose when they first need this?",
+    // Purchase-trigger queries (2)
+    "I need to pick a vendor this quarter — what should I shortlist?",
+    "What are the must-have features when buying in this category?",
   ];
 }
 
@@ -220,20 +263,52 @@ async function upsertAuditResult(
   });
 }
 
-function extractFirstCompetitor(text: string, domain: string) {
-  const matches = text.match(/\b[A-Z][a-z]+(?:\s[A-Z][a-z]+)?\b/g);
+function extractAllCompetitors(text: string, domain: string): string[] {
   const clientName = domain.split(".")[0].toLowerCase();
-  return (
-    matches?.find((match) => {
-      const value = match.toLowerCase();
-      return (
-        value !== clientName &&
-        match.length > 3 &&
-        !COMPETITOR_STOP_WORDS.has(match) &&
-        !match.endsWith("ing")
-      );
-    }) ?? null
-  );
+  const clientPatterns = buildBrandPatterns(domain);
+  const candidates = new Map<string, number>(); // normalized → mention count
+
+  // Pattern 1: Brands with TLD (e.g., "monday.com", "notion.so")
+  for (const match of text.matchAll(/\b([a-zA-Z][\w-]*\.(?:com|io|ai|co|so|app|dev|org))\b/g)) {
+    const raw = match[1];
+    const key = raw.toLowerCase().split(".")[0];
+    if (key !== clientName && key.length > 2) {
+      candidates.set(key, (candidates.get(key) || 0) + 1);
+    }
+  }
+
+  // Pattern 2: Capitalized words that look like brand names
+  // Require either multi-word or followed by context clues
+  for (const match of text.matchAll(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b/g)) {
+    const raw = match[1];
+    const key = raw.toLowerCase();
+    if (
+      key === clientName ||
+      raw.length <= 3 ||
+      COMPETITOR_STOP_WORDS.has(raw) ||
+      COMPETITOR_STOP_WORDS.has(raw.split(" ")[0]) ||
+      raw.endsWith("ing") ||
+      raw.endsWith("tion") ||
+      raw.endsWith("ment") ||
+      raw.endsWith("ness") ||
+      raw.endsWith("able") ||
+      raw.endsWith("ity") ||
+      clientPatterns.some((p) => p.test(raw))
+    ) {
+      continue;
+    }
+    candidates.set(key, (candidates.get(key) || 0) + 1);
+  }
+
+  // Sort by mention count (most mentioned first) and return
+  return [...candidates.entries()]
+    .sort(([, a], [, b]) => b - a)
+    .map(([name]) => name.charAt(0).toUpperCase() + name.slice(1));
+}
+
+/** Backward-compatible wrapper that returns the top competitor or null. */
+function extractFirstCompetitor(text: string, domain: string): string | null {
+  return extractAllCompetitors(text, domain)[0] ?? null;
 }
 
 function classifySentiment(text: string, domain: string) {
@@ -286,12 +361,7 @@ async function runClaudeQuery(query: string, domain: string): Promise<ProviderRe
 
   const text = extractAnthropicText(response);
 
-  return {
-    cited: text.toLowerCase().includes(domain.replace("www.", "").toLowerCase()),
-    competitor_cited: extractFirstCompetitor(text, domain),
-    sentiment: classifySentiment(text, domain),
-    excerpt: text.slice(0, 250),
-  };
+  return buildProviderResult(text, domain);
 }
 
 async function runChatGPTQuery(query: string, domain: string): Promise<ProviderResult> {
@@ -312,9 +382,50 @@ async function runChatGPTQuery(query: string, domain: string): Promise<ProviderR
 
   const text = response.choices[0]?.message?.content || "";
 
+  return buildProviderResult(text, domain);
+}
+
+function buildProviderResult(text: string, domain: string): ProviderResult {
+  const cited = isBrandCited(text, domain);
+  const competitors = extractAllCompetitors(text, domain);
+  const clientName = domain.split(".")[0].toLowerCase();
+
+  // Build ordered list of all brands mentioned (target + competitors)
+  // by scanning the text for first-appearance order.
+  const allMentions: Array<{ name: string; index: number }> = [];
+
+  if (cited) {
+    // Find target's first appearance position
+    const targetPatterns = buildBrandPatterns(domain);
+    let targetIndex = text.length;
+    for (const pattern of targetPatterns) {
+      const match = pattern.exec(text);
+      if (match && match.index < targetIndex) {
+        targetIndex = match.index;
+      }
+    }
+    allMentions.push({ name: clientName, index: targetIndex });
+  }
+
+  for (const comp of competitors) {
+    const pattern = new RegExp(`\\b${escapeRegExpChars(comp)}\\b`, "i");
+    const match = pattern.exec(text);
+    if (match) {
+      allMentions.push({ name: comp.toLowerCase(), index: match.index });
+    }
+  }
+
+  allMentions.sort((a, b) => a.index - b.index);
+  const allBrands = allMentions.map((m) => m.name);
+  const targetPosition = cited
+    ? allBrands.indexOf(clientName) + 1
+    : 0;
+
   return {
-    cited: text.toLowerCase().includes(domain.replace("www.", "").toLowerCase()),
-    competitor_cited: extractFirstCompetitor(text, domain),
+    cited,
+    competitor_cited: competitors[0] ?? null,
+    all_brands: allBrands,
+    target_position: targetPosition,
     sentiment: classifySentiment(text, domain),
     excerpt: text.slice(0, 250),
   };
@@ -536,15 +647,18 @@ export async function processAuditRequested(payload: {
             messages: [
               {
                 role: "user",
-                content: `Generate 20 queries a potential buyer would ask an AI assistant when researching this product:
+                content: `Generate 20 search queries a potential buyer would ask an AI assistant when researching this type of product. Use the page content below to understand the product category and use cases, but DO NOT include the company name, brand name, or domain in any query. Every query must be brand-neutral so we can measure organic citation share.
+
+Page content:
 ${homepageText}
 
 Mix:
-- 5 branded: "What is [company]?", "[company] reviews", "[company] pricing", "[company] alternatives", "Is [company] legit?"
-- 10 category: "Best [type] for [use case]", "Top [type] tools", "Compare [type] options"
-- 5 problem: "How do I [solve problem this product solves]"
+- 8 category/comparison: "Best [type] for [use case]", "Top [type] tools", "Compare [type] options", "Which vendors lead in [space]?"
+- 6 problem-based: "How do I [solve problem]?", "How do enterprises handle [challenge]?"
+- 4 persona-based: "What do [role] use for [task]?", "What platform do [persona] choose?"
+- 2 purchase-trigger: "I need to pick a vendor this quarter — what should I shortlist?", "Must-have features when buying [type]"
 
-Return ONLY a JSON array of 20 strings.`,
+IMPORTANT: No query may contain any company or brand name. Return ONLY a JSON array of 20 strings.`,
               },
             ],
           });
@@ -603,14 +717,38 @@ Return ONLY a JSON array of 20 strings.`,
         throw new Error("All provider query calls failed.");
       }
 
+      const claudeResults = queryResults.filter((r) => r.claude);
+      const chatgptResults = queryResults.filter((r) => r.chatgpt);
+      const claudeCount = claudeResults.length || 1;
+      const chatgptCount = chatgptResults.length || 1;
+      const totalCount = claudeCount + chatgptCount;
+
       const claudeCited = queryResults.filter((result) => result.claude?.cited).length;
       const chatgptCited = queryResults.filter((result) => result.chatgpt?.cited).length;
-      const allCompetitors = queryResults
-        .flatMap((result) => [
-          result.claude?.competitor_cited,
-          result.chatgpt?.competitor_cited,
-        ])
-        .filter((value): value is string => Boolean(value));
+
+      // Position-weighted scoring: being mentioned 1st of 5 brands scores
+      // higher than being mentioned 5th of 5.
+      function positionScore(result: ProviderResult | null): number {
+        if (!result?.cited || result.target_position === 0) return 0;
+        const total = result.all_brands.length || 1;
+        return (total - result.target_position + 1) / total;
+      }
+
+      let claudePositionTotal = 0;
+      let chatgptPositionTotal = 0;
+      for (const r of queryResults) {
+        claudePositionTotal += positionScore(r.claude);
+        chatgptPositionTotal += positionScore(r.chatgpt);
+      }
+
+      // Count competitors per-provider for accurate per-column display
+      const claudeCompetitors = queryResults
+        .map((r) => r.claude?.competitor_cited)
+        .filter((v): v is string => Boolean(v));
+      const chatgptCompetitors = queryResults
+        .map((r) => r.chatgpt?.competitor_cited)
+        .filter((v): v is string => Boolean(v));
+      const allCompetitors = [...claudeCompetitors, ...chatgptCompetitors];
 
       const competitorCounts = allCompetitors.reduce<Record<string, number>>((acc, value) => {
         acc[value] = (acc[value] || 0) + 1;
@@ -621,9 +759,28 @@ Return ONLY a JSON array of 20 strings.`,
         .sort(([, a], [, b]) => b - a)
         .slice(0, 2);
 
-      const citationShare = ((claudeCited + chatgptCited) / 40) * 100;
-      const competitor1Share = topCompetitors[0] ? (topCompetitors[0][1] / 40) * 100 : 0;
-      const competitor2Share = topCompetitors[1] ? (topCompetitors[1][1] / 40) * 100 : 0;
+      // Position-weighted citation share: rewards being mentioned first,
+      // penalizes being an afterthought in a long list.
+      const citationShare = ((claudePositionTotal + chatgptPositionTotal) / totalCount) * 100;
+      const competitor1Share = topCompetitors[0] ? (topCompetitors[0][1] / totalCount) * 100 : 0;
+      const competitor2Share = topCompetitors[1] ? (topCompetitors[1][1] / totalCount) * 100 : 0;
+
+      // Per-provider competitor shares for accurate PDF display
+      function countCompetitorByProvider(
+        name: string,
+        providerResults: string[],
+        providerTotal: number,
+      ) {
+        const count = providerResults.filter((c) => c === name).length;
+        return (count / providerTotal) * 100;
+      }
+
+      const comp1Name = topCompetitors[0]?.[0];
+      const comp2Name = topCompetitors[1]?.[0];
+      const competitor1ClaudeShare = comp1Name ? countCompetitorByProvider(comp1Name, claudeCompetitors, claudeCount) : 0;
+      const competitor1ChatgptShare = comp1Name ? countCompetitorByProvider(comp1Name, chatgptCompetitors, chatgptCount) : 0;
+      const competitor2ClaudeShare = comp2Name ? countCompetitorByProvider(comp2Name, claudeCompetitors, claudeCount) : 0;
+      const competitor2ChatgptShare = comp2Name ? countCompetitorByProvider(comp2Name, chatgptCompetitors, chatgptCount) : 0;
 
       await upsertAuditResult(order.id, domain, {
         claudeQueries: queryResults.map((result) => ({
@@ -644,10 +801,21 @@ Return ONLY a JSON array of 20 strings.`,
           queryResults,
           claudeCited,
           chatgptCited,
-          claudeCitationShare: (claudeCited / 20) * 100,
-          chatgptCitationShare: (chatgptCited / 20) * 100,
+          claudeCitationShare: (claudePositionTotal / claudeCount) * 100,
+          chatgptCitationShare: (chatgptPositionTotal / chatgptCount) * 100,
         },
       });
+
+      // 95% confidence interval for the citation share based on sample variance
+      const perQueryScores = queryResults.flatMap((r) => [
+        positionScore(r.claude),
+        positionScore(r.chatgpt),
+      ]);
+      const mean = perQueryScores.reduce((s, v) => s + v, 0) / (perQueryScores.length || 1);
+      const variance =
+        perQueryScores.reduce((s, v) => s + (v - mean) ** 2, 0) / (perQueryScores.length || 1);
+      const stdError = Math.sqrt(variance / (perQueryScores.length || 1));
+      const marginOfError = Math.round(stdError * 1.96 * 100);
 
       return {
         queryResults,
@@ -655,10 +823,15 @@ Return ONLY a JSON array of 20 strings.`,
         topCompetitors,
         claudeCited,
         chatgptCited,
-        claudeShare: (claudeCited / 20) * 100,
-        chatgptShare: (chatgptCited / 20) * 100,
+        claudeShare: (claudePositionTotal / claudeCount) * 100,
+        chatgptShare: (chatgptPositionTotal / chatgptCount) * 100,
         competitor1Share,
         competitor2Share,
+        competitor1ClaudeShare,
+        competitor1ChatgptShare,
+        competitor2ClaudeShare,
+        competitor2ChatgptShare,
+        marginOfError,
       };
     })();
 
@@ -816,6 +989,12 @@ SECTION 4 - 60-DAY PROJECTION
     })();
 
     const step5 = await (async () => {
+      const schemaTemplates = buildSchemaTemplates({
+        domain,
+        companyName,
+        companyDescription: step4.executiveSummary,
+      });
+
       const reportData: AuditReportData = {
         domain,
         orderDate,
@@ -825,8 +1004,12 @@ SECTION 4 - 60-DAY PROJECTION
         chatgptCited: step2.chatgptCited,
         competitor1: step2.topCompetitors[0]?.[0] ?? null,
         competitor1Share: step2.competitor1Share,
+        competitor1ClaudeShare: step2.competitor1ClaudeShare,
+        competitor1ChatgptShare: step2.competitor1ChatgptShare,
         competitor2: step2.topCompetitors[1]?.[0] ?? null,
         competitor2Share: step2.competitor2Share,
+        competitor2ClaudeShare: step2.competitor2ClaudeShare,
+        competitor2ChatgptShare: step2.competitor2ChatgptShare,
         queryResults: step2.queryResults,
         bingIndexed: step3.bingIndexed,
         bingPageCount: step3.bingPageCount,
@@ -836,6 +1019,8 @@ SECTION 4 - 60-DAY PROJECTION
         topFixes: step4.topFixes,
         projection: step4.projection,
         generatedAt: new Date().toISOString(),
+        marginOfError: step2.marginOfError,
+        schemaTemplates,
         auditStep: "generate-pdf",
       };
 
@@ -880,17 +1065,7 @@ SECTION 4 - 60-DAY PROJECTION
         throw new Error(`PDF upload failed: ${upload.error.message}`);
       }
 
-      const signed = await supabase.storage
-        .from("audit-reports")
-        .createSignedUrl(filePath, 60 * 60 * 24 * 30);
-
-      if (signed.error || !signed.data?.signedUrl) {
-        throw new Error(
-          `Signed URL creation failed: ${signed.error?.message || "missing signed URL"}`,
-        );
-      }
-
-      const pdfUrl = signed.data.signedUrl;
+      const pdfUrl = `${appEnv.appUrl}/api/reports/${order.stripePaymentIntentId || order.id}/download`;
       reportUrl = `${appEnv.appUrl}/report/${order.stripePaymentIntentId || order.id}`;
 
       await upsertAuditResult(order.id, domain, {

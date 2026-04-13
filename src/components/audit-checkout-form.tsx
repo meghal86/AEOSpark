@@ -39,12 +39,26 @@ export function AuditCheckoutForm(props: {
       });
 
       const payload = (await response.json()) as {
-        data?: { checkoutUrl?: string };
+        data?: {
+          checkoutUrl?: string;
+          existingOrder?: boolean;
+          redirectUrl?: string;
+          status?: string;
+        };
         error?: string;
       };
 
-      if (!response.ok || !payload.data?.checkoutUrl) {
+      if (!response.ok || (!payload.data?.checkoutUrl && !payload.data?.redirectUrl)) {
         throw new Error(payload.error || "Checkout failed.");
+      }
+
+      if (payload.data?.existingOrder && payload.data.redirectUrl) {
+        router.push(payload.data.redirectUrl);
+        return;
+      }
+
+      if (!payload.data?.checkoutUrl) {
+        throw new Error("Checkout session did not return a redirect URL.");
       }
 
       router.push(payload.data.checkoutUrl);

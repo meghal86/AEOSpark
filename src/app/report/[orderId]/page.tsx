@@ -1,3 +1,4 @@
+import { BuyerSessionSync } from "@/components/buyer-session-sync";
 import Link from "next/link";
 
 import { PageUtilityNav } from "@/components/page-utility-nav";
@@ -160,6 +161,14 @@ export default async function ReportPage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-10">
+      <BuyerSessionSync
+        domain={domain}
+        email={order.email}
+        orderReference={reference}
+        reportUrl={`/report/${reference}`}
+        savedAt={new Date().toISOString()}
+        status={order.status === "delivered" ? "delivered" : "processing"}
+      />
       <PageUtilityNav />
 
       <section className="surface-panel grid gap-6 rounded-[2.5rem] p-6 lg:grid-cols-[240px_1fr] lg:p-8">
@@ -195,19 +204,18 @@ export default async function ReportPage({
               <a href="#queries">Query Results</a>
               <a href="#gaps">Gap Analysis</a>
               <a href="#roadmap">Fix Roadmap</a>
+              <a href="#implementation">Implementation Pack</a>
             </div>
           </div>
 
           <div className="grid gap-3">
-            {report.pdfUrl ? (
-              <Link
-                className="btn-secondary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
-                href={report.pdfUrl}
-                target="_blank"
-              >
-                Download PDF
-              </Link>
-            ) : null}
+            <Link
+              className="btn-secondary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
+              href={`/api/reports/${reference}/download`}
+              target="_blank"
+            >
+              Download PDF
+            </Link>
             <Link
               className="btn-primary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
               href={appEnv.calendlyUrl}
@@ -354,6 +362,41 @@ export default async function ReportPage({
                 <p className="mt-3 text-sm leading-7 text-stone-700">{report.projection}</p>
               </div>
             </article>
+          </section>
+
+          <section className="surface-card rounded-[2rem] p-6" id="implementation">
+            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
+              Implementation Pack
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold text-stone-950">
+              Ready-to-paste schema templates
+            </h2>
+            <p className="mt-2 text-sm leading-7 text-stone-700">
+              These templates are prefilled for {domain}. Hand them to engineering with the fix
+              roadmap so the audit turns into shipped structured data quickly.
+            </p>
+
+            <div className="mt-6 grid gap-5">
+              {report.schemaTemplates.map((template) => (
+                <article
+                  className="rounded-[1.7rem] border border-stone-200 bg-stone-50/60 p-5"
+                  key={template.id}
+                >
+                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <p className="text-lg font-semibold text-stone-950">{template.title}</p>
+                      <p className="text-sm text-stone-600">
+                        {template.filename} · {template.placement}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-stone-700">{template.whyItMatters}</p>
+                  <pre className="mt-4 overflow-x-auto rounded-[1.3rem] border border-stone-200 bg-[#f7f0e7] p-4 text-xs leading-6 text-stone-800">
+                    <code>{template.code}</code>
+                  </pre>
+                </article>
+              ))}
+            </div>
           </section>
 
           <div className="rounded-[1.7rem] border border-stone-200 bg-stone-50/80 px-5 py-4 text-sm text-stone-600">

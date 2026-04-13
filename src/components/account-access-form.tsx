@@ -1,11 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export function AccountAccessForm() {
-  const [email, setEmail] = useState("");
+import { BUYER_SESSION_KEY, readBuyerSession } from "@/lib/buyer-session";
+import { normalizePublicUrl } from "@/lib/url-security";
+
+export function AccountAccessForm(props?: {
+  mode?: "sign-in" | "sign-up";
+  defaultEmail?: string;
+  defaultName?: string;
+  defaultCompany?: string;
+  defaultWebsite?: string;
+  submitLabel?: string;
+  successMessage?: string;
+}) {
+  const isSignUp = props?.mode === "sign-up";
+  const [fullName, setFullName] = useState(props?.defaultName || "");
+  const [email, setEmail] = useState(props?.defaultEmail || "");
+  const [companyName, setCompanyName] = useState(props?.defaultCompany || "");
+  const [website, setWebsite] = useState(props?.defaultWebsite || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (props?.defaultEmail || typeof window === "undefined") {
+      return;
+    }
+
+    const stored = readBuyerSession(window.localStorage.getItem(BUYER_SESSION_KEY));
+    if (stored?.email) {
+      setEmail((current) => current || stored.email);
+    }
+  }, [props?.defaultEmail]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -13,14 +39,30 @@ export function AccountAccessForm() {
     setMessage(null);
 
     try {
-      await fetch("/api/auth/magic-link", {
+      const response = await fetch("/api/auth/magic-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email,
+          fullName: isSignUp ? fullName : undefined,
+          companyName: isSignUp ? companyName : undefined,
+          website: isSignUp ? normalizePublicUrl(website) : undefined,
+        }),
       });
-      setMessage("Check your email for the access link.");
-    } catch {
-      setMessage("Check your email for the access link.");
+
+      const payload = (await response.json().catch(() => null)) as
+        | { success?: boolean; error?: string }
+        | null;
+
+      if (!response.ok || payload?.success === false) {
+        throw new Error(payload?.error || "Unable to send the access link.");
+      }
+
+      setMessage(props?.successMessage || "Check your email for the access link.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Unable to send the access link.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -28,8 +70,38 @@ export function AccountAccessForm() {
 
   return (
     <form className="grid gap-4" onSubmit={handleSubmit}>
+      {isSignUp ? (
+        <>
+          <label className="grid gap-2 text-sm font-medium text-stone-700">
+            Full name
+            <input
+              className="input-field h-14 rounded-2xl px-4 text-base"
+              name="fullName"
+              onChange={(event) => setFullName(event.target.value)}
+              placeholder="Your full name"
+              required
+              type="text"
+              value={fullName}
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-medium text-stone-700">
+            Company name
+            <input
+              className="input-field h-14 rounded-2xl px-4 text-base"
+              name="companyName"
+              onChange={(event) => setCompanyName(event.target.value)}
+              placeholder="Your company"
+              required
+              type="text"
+              value={companyName}
+            />
+          </label>
+        </>
+      ) : null}
+
       <label className="grid gap-2 text-sm font-medium text-stone-700">
-        Email
+        Work email
         <input
           className="input-field h-14 rounded-2xl px-4 text-base"
           name="email"
@@ -41,12 +113,29 @@ export function AccountAccessForm() {
         />
       </label>
 
+      {isSignUp ? (
+        <label className="grid gap-2 text-sm font-medium text-stone-700">
+          Website
+          <input
+            className="input-field h-14 rounded-2xl px-4 text-base"
+            name="website"
+            onChange={(event) => setWebsite(event.target.value)}
+            placeholder="yourcompany.com"
+            required
+            type="text"
+            value={website}
+          />
+        </label>
+      ) : null}
+
       <button
         className="btn-primary inline-flex h-14 items-center justify-center rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting ? "Sending access link..." : "Send access link →"}
+        {isSubmitting
+          ? "Sending access link..."
+          : props?.submitLabel || "Send access link →"}
       </button>
 
       {message ? <p className="text-sm text-stone-600">{message}</p> : null}

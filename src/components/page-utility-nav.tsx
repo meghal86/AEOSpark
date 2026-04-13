@@ -44,6 +44,12 @@ export function PageUtilityNav(props?: { homeHref?: string }) {
       >
         Home
       </Link>
+      <Link
+        className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
+        href="/account"
+      >
+        My Reports
+      </Link>
     </div>
   );
 }

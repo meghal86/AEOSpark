@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 
+import { AccountAccessForm } from "@/components/account-access-form";
+import { BuyerSessionSync } from "@/components/buyer-session-sync";
 import { PageUtilityNav } from "@/components/page-utility-nav";
 import { appEnv } from "@/lib/env";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -41,6 +43,7 @@ export default async function ConfirmationPage({
   let provisionalOrder:
     | {
         createdAt: string;
+        email: string;
         name: string;
         website: string;
         amount: number;
@@ -58,6 +61,7 @@ export default async function ConfirmationPage({
 
       provisionalOrder = {
         createdAt: new Date().toISOString(),
+        email: session.customer_details?.email || "",
         name: session.metadata?.name || session.customer_details?.name || "there",
         website: session.metadata?.url || "your site",
         amount: amountTotal,
@@ -81,6 +85,7 @@ export default async function ConfirmationPage({
   const displayOrder = order
     ? {
         createdAt: order.createdAt,
+        email: order.email,
         name: order.name,
         website: order.website,
         amount: order.amount,
@@ -90,6 +95,7 @@ export default async function ConfirmationPage({
     : provisionalOrder!;
 
   const orderDomain = displayDomain(displayOrder.website);
+  const buyerEmail = displayOrder.email || order?.email || "";
   const syncMessage = !order
     ? "Payment is confirmed and the audit is being initialized now. The record sync usually completes within a minute."
     : "Your order record is confirmed and the audit workflow is already running.";
@@ -101,6 +107,20 @@ export default async function ConfirmationPage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-10 md:py-12">
+      <BuyerSessionSync
+        domain={orderDomain}
+        email={buyerEmail}
+        orderReference={displayOrder.label}
+        reportUrl={order?.status === "delivered" ? `/report/${displayOrder.label}` : null}
+        savedAt={new Date().toISOString()}
+        status={
+          displayOrder.status === "delivered"
+            ? "delivered"
+            : displayOrder.status === "processing"
+              ? "processing"
+              : "pending"
+        }
+      />
       <PageUtilityNav />
 
       <section className="surface-panel app-fade-up grid gap-6 rounded-[2.5rem] p-6 lg:grid-cols-[1.18fr_0.82fr] lg:p-8">
@@ -271,6 +291,32 @@ export default async function ConfirmationPage({
           </div>
         </section>
       ) : null}
+
+      <section className="surface-panel rounded-[2.2rem] p-6 md:p-8">
+        <div className="grid gap-5 md:grid-cols-[1.1fr_0.9fr] md:items-start">
+          <div className="grid gap-2">
+            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
+              Save this purchase to your account
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight text-stone-950">
+              Claim your buyer account now
+            </h2>
+            <p className="max-w-2xl text-sm leading-7 text-stone-700">
+              Use the same email from checkout and we&apos;ll send a magic link so this report
+              is always available in your AEOSpark account. That way you won&apos;t be asked to
+              pay again for the same audit just to find the report later.
+            </p>
+          </div>
+
+          <div className="surface-card rounded-[1.8rem] p-5">
+            <AccountAccessForm
+              defaultEmail={buyerEmail}
+              submitLabel="Claim my account →"
+              successMessage="Check your email for the access link. This audit will appear in your account."
+            />
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

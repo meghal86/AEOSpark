@@ -199,6 +199,22 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#f5ede4",
   },
+  templateCard: {
+    border: "1 solid #e5ddd3",
+    borderRadius: 12,
+    padding: 10,
+    marginTop: 10,
+    backgroundColor: "#ffffff",
+  },
+  templateCode: {
+    marginTop: 8,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#f5ede4",
+    fontSize: 7.5,
+    color: "#2a190f",
+    lineHeight: 1.35,
+  },
   center: {
     alignItems: "center",
     justifyContent: "center",
@@ -236,6 +252,10 @@ function splitFixes(topFixes: string) {
     .filter(Boolean)
     .map((line) => line.replace(/^\d+[\).\s-]*/, ""))
     .slice(0, 5);
+}
+
+function clipTemplateCode(code: string) {
+  return clip(code, 560);
 }
 
 function providerStatus(provider: QueryAuditRow["claude"]) {
@@ -390,10 +410,10 @@ function AuditDeliveryDocument({ report }: { report: AuditReportData }) {
               <Text>{report.competitor1 || "Top competitor"}</Text>
             </View>
             <View style={[styles.cell, styles.valueCol]}>
-              <Text>{formatPercent(report.competitor1Share)}</Text>
+              <Text>{formatPercent(report.competitor1ClaudeShare ?? report.competitor1Share)}</Text>
             </View>
             <View style={[styles.cell, styles.valueCol]}>
-              <Text>{formatPercent(report.competitor1Share)}</Text>
+              <Text>{formatPercent(report.competitor1ChatgptShare ?? report.competitor1Share)}</Text>
             </View>
           </View>
 
@@ -402,13 +422,23 @@ function AuditDeliveryDocument({ report }: { report: AuditReportData }) {
               <Text>{report.competitor2 || "Second competitor"}</Text>
             </View>
             <View style={[styles.cell, styles.valueCol]}>
-              <Text>{formatPercent(report.competitor2Share)}</Text>
+              <Text>{formatPercent(report.competitor2ClaudeShare ?? report.competitor2Share)}</Text>
             </View>
             <View style={[styles.cell, styles.valueCol]}>
-              <Text>{formatPercent(report.competitor2Share)}</Text>
+              <Text>{formatPercent(report.competitor2ChatgptShare ?? report.competitor2Share)}</Text>
             </View>
           </View>
         </View>
+
+        {report.marginOfError != null && report.marginOfError > 0 && (
+          <View style={styles.statLine}>
+            <Text style={styles.bodySmall}>
+              Score confidence: these numbers carry an estimated margin of error of
+              {" "}±{report.marginOfError}% based on variance across {report.queryResults.length} queries.
+              Re-running the audit may produce slightly different results because AI responses are non-deterministic.
+            </Text>
+          </View>
+        )}
 
         <View style={styles.card}>
           <Text style={styles.sectionBody}>{report.executiveSummary}</Text>
@@ -524,17 +554,30 @@ function AuditDeliveryDocument({ report }: { report: AuditReportData }) {
         </View>
       </Page>
 
-      <Page size="A4" style={[styles.page, styles.center]}>
-        <Text style={styles.brand}>AEOSpark</Text>
-        <Text style={styles.title}>Questions?</Text>
-        <Text style={styles.subtitle}>Email hello@aeospark.com</Text>
-        <Text style={[styles.subtitle, { marginTop: 16 }]}>
-          Book your strategy call: {report.domain}
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.eyebrow}>Page 6</Text>
+        <Text style={styles.sectionTitle}>Implementation Pack</Text>
+        <Text style={styles.sectionBody}>
+          Ready-to-paste schema templates adapted to {report.domain}. Use these on the matching
+          page types so the roadmap turns into shipped structured data, not just advice.
         </Text>
+
+        {report.schemaTemplates.slice(0, 3).map((template) => (
+          <View key={template.id} style={styles.templateCard}>
+            <Text style={{ fontSize: 11, fontWeight: 700 }}>{template.title}</Text>
+            <Text style={[styles.bodySmall, { marginTop: 4 }]}>
+              {template.filename} · {template.placement}
+            </Text>
+            <Text style={[styles.bodySmall, { marginTop: 5 }]}>{template.whyItMatters}</Text>
+            <Text style={styles.templateCode}>{clipTemplateCode(template.code)}</Text>
+          </View>
+        ))}
+
         <View style={styles.footerBand}>
+          <Text style={{ fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Questions?</Text>
           <Text style={styles.sectionBody}>
-            This report was generated from live model outputs and index checks. Use it as the
-            baseline for the implementation sprint and the follow-up measurement cycle.
+            Email hello@aeospark.com and bring this implementation pack to the strategy call so
+            engineering can ship the highest-impact schema first.
           </Text>
         </View>
       </Page>

@@ -1,3 +1,4 @@
+import { PurchasedHomeBanner } from "@/components/purchased-home-banner";
 import { UrlIntakeForm } from "@/components/url-intake-form";
 import { FounderTrustCard } from "@/components/founder-trust-card";
 import { pilotProof } from "@/lib/site-proof";
@@ -84,6 +85,12 @@ export default function Home() {
           <div className="hidden items-center gap-5 md:flex">
             <a
               className="text-sm font-semibold text-stone-700 transition hover:text-stone-950"
+              href="/sign-in"
+            >
+              Sign in
+            </a>
+            <a
+              className="text-sm font-semibold text-stone-700 transition hover:text-stone-950"
               href="#platform"
             >
               How it works
@@ -93,6 +100,12 @@ export default function Home() {
               href="#signals"
             >
               Signals
+            </a>
+            <a
+              className="text-sm font-semibold text-stone-700 transition hover:text-stone-950"
+              href="/account"
+            >
+              My Reports
             </a>
             <a
               className="btn-primary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold transition"
@@ -105,6 +118,12 @@ export default function Home() {
         <div className="flex flex-wrap gap-3 md:hidden">
           <a
             className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
+            href="/sign-in"
+          >
+            Sign in
+          </a>
+          <a
+            className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
             href="#platform"
           >
             How it works
@@ -114,6 +133,12 @@ export default function Home() {
             href="#signals"
           >
             Signals
+          </a>
+          <a
+            className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
+            href="/account"
+          >
+            My Reports
           </a>
           <a
             className="btn-primary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold transition"
@@ -160,6 +185,8 @@ export default function Home() {
           </div>
         </section>
       </header>
+
+      <PurchasedHomeBanner />
 
       <section className="surface-card grid gap-4 rounded-[2rem] p-5" id="signals">
         <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">

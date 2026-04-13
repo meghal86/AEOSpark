@@ -1,5 +1,6 @@
 import { getOrderByReference } from "@/lib/storage";
 import { prisma } from "@/lib/prisma";
+import type { SchemaTemplatePack } from "@/lib/schema-templates";
 
 export type ProviderQueryAudit = {
   cited: boolean;
@@ -23,8 +24,16 @@ export interface AuditReportData {
   chatgptCited: number;
   competitor1: string | null;
   competitor1Share: number;
+  /** Competitor 1 citation share from Claude queries only (0-100). */
+  competitor1ClaudeShare?: number;
+  /** Competitor 1 citation share from ChatGPT queries only (0-100). */
+  competitor1ChatgptShare?: number;
   competitor2: string | null;
   competitor2Share: number;
+  /** Competitor 2 citation share from Claude queries only (0-100). */
+  competitor2ClaudeShare?: number;
+  /** Competitor 2 citation share from ChatGPT queries only (0-100). */
+  competitor2ChatgptShare?: number;
   queryResults: QueryAuditRow[];
   bingIndexed: boolean;
   bingPageCount: number;
@@ -34,6 +43,9 @@ export interface AuditReportData {
   topFixes: string;
   projection: string;
   generatedAt: string;
+  schemaTemplates: SchemaTemplatePack[];
+  /** 95% confidence margin of error for citation share (±percentage points). */
+  marginOfError?: number;
   auditStep?: string;
   pdfUrl?: string | null;
   reportUrl?: string | null;
@@ -68,8 +80,12 @@ function parseReportData(value: unknown): AuditReportData | null {
     chatgptCited: numberValue(report.chatgptCited),
     competitor1: report.competitor1 ?? null,
     competitor1Share: numberValue(report.competitor1Share),
+    competitor1ClaudeShare: report.competitor1ClaudeShare != null ? numberValue(report.competitor1ClaudeShare) : undefined,
+    competitor1ChatgptShare: report.competitor1ChatgptShare != null ? numberValue(report.competitor1ChatgptShare) : undefined,
     competitor2: report.competitor2 ?? null,
     competitor2Share: numberValue(report.competitor2Share),
+    competitor2ClaudeShare: report.competitor2ClaudeShare != null ? numberValue(report.competitor2ClaudeShare) : undefined,
+    competitor2ChatgptShare: report.competitor2ChatgptShare != null ? numberValue(report.competitor2ChatgptShare) : undefined,
     queryResults: report.queryResults as QueryAuditRow[],
     bingIndexed: Boolean(report.bingIndexed),
     bingPageCount: numberValue(report.bingPageCount),
@@ -79,6 +95,9 @@ function parseReportData(value: unknown): AuditReportData | null {
     topFixes: report.topFixes || "",
     projection: report.projection || "",
     generatedAt: report.generatedAt || new Date().toISOString(),
+    schemaTemplates: Array.isArray(report.schemaTemplates)
+      ? (report.schemaTemplates as SchemaTemplatePack[])
+      : [],
     auditStep: report.auditStep,
     pdfUrl: report.pdfUrl ?? null,
     reportUrl: report.reportUrl ?? null,

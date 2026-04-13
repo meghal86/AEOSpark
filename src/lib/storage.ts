@@ -844,6 +844,44 @@ export async function getOrderByReference(orderReference: string) {
   return orderFromDb(byPaymentIntent, { auditId, clientId });
 }
 
+export async function findExistingAuditOrder(email: string, website: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const targetDomain = domainFromUrl(website);
+
+  const rows = await prisma.order.findMany({
+    where: {
+      email: {
+        equals: normalizedEmail,
+        mode: "insensitive",
+      },
+      status: {
+        in: ["pending", "processing", "delivered", "requires_action"],
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
+
+  const match = rows.find((row) => {
+    try {
+      return domainFromUrl(row.url) === targetDomain;
+    } catch {
+      return false;
+    }
+  });
+
+  if (!match) {
+    return undefined;
+  }
+
+  const [auditId, clientId] = await Promise.all([
+    loadAuditIdForOrder(match.id),
+    loadClientIdForOrder(match),
+  ]);
+
+  return orderFromDb(match, { auditId, clientId });
+}
+
 export async function getClientById(clientId: string) {
   const row = await prisma.client.findUnique({ where: { id: clientId } });
   return row ? clientFromDb(row) : undefined;
