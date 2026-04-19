@@ -1,10 +1,21 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { AccountAccessForm } from "@/components/account-access-form";
 import { PageUtilityNav } from "@/components/page-utility-nav";
 import { PasswordSignInForm } from "@/components/password-sign-in-form";
+import { createServerAuthClient } from "@/lib/supabase-auth";
 
-export default function SignInPage() {
+export default async function SignInPage() {
+  const supabase = await createServerAuthClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user?.email) {
+    redirect("/account");
+  }
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-8 px-6 py-10 md:px-10">
       <PageUtilityNav />

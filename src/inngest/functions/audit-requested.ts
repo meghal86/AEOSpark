@@ -150,7 +150,7 @@ function safeJsonArray(input: string) {
   }
 }
 
-function getFallbackQueries(_url: string) {
+function getFallbackQueries() {
   // All queries are brand-neutral. The target company should only appear
   // in AI responses if the model genuinely considers it relevant.
   // Including the company name in queries inflates citation share and
@@ -304,11 +304,6 @@ function extractAllCompetitors(text: string, domain: string): string[] {
   return [...candidates.entries()]
     .sort(([, a], [, b]) => b - a)
     .map(([name]) => name.charAt(0).toUpperCase() + name.slice(1));
-}
-
-/** Backward-compatible wrapper that returns the top competitor or null. */
-function extractFirstCompetitor(text: string, domain: string): string | null {
-  return extractAllCompetitors(text, domain)[0] ?? null;
 }
 
 function classifySentiment(text: string, domain: string) {
@@ -624,7 +619,7 @@ export async function processAuditRequested(payload: {
 
     const step1 = await (async () => {
       let homepageText = "";
-      let queries = getFallbackQueries(order.website);
+      let queries = getFallbackQueries();
 
       try {
         const response = await fetch(order.website, {
@@ -669,7 +664,7 @@ IMPORTANT: No query may contain any company or brand name. Return ONLY a JSON ar
           }
         }
       } catch {
-        queries = getFallbackQueries(order.website);
+        queries = getFallbackQueries();
       }
 
       await upsertAuditResult(order.id, domain, {

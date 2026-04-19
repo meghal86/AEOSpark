@@ -4,7 +4,8 @@ import { createServerAuthClient } from "@/lib/supabase-auth";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const next = url.searchParams.get("next") || "/account";
+  const nextParam = url.searchParams.get("next") || "/account";
+  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/account";
   const code = url.searchParams.get("code");
   const tokenHash = url.searchParams.get("token_hash");
   const type = url.searchParams.get("type");

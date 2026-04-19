@@ -1,6 +1,7 @@
 import { PurchasedHomeBanner } from "@/components/purchased-home-banner";
 import { UrlIntakeForm } from "@/components/url-intake-form";
 import { FounderTrustCard } from "@/components/founder-trust-card";
+import { AuthHeaderActions } from "@/components/auth-header-actions";
 import { pilotProof } from "@/lib/site-proof";
 
 const howItWorks = [
@@ -85,12 +86,6 @@ export default function Home() {
           <div className="hidden items-center gap-5 md:flex">
             <a
               className="text-sm font-semibold text-stone-700 transition hover:text-stone-950"
-              href="/sign-in"
-            >
-              Sign in
-            </a>
-            <a
-              className="text-sm font-semibold text-stone-700 transition hover:text-stone-950"
               href="#platform"
             >
               How it works
@@ -103,9 +98,9 @@ export default function Home() {
             </a>
             <a
               className="text-sm font-semibold text-stone-700 transition hover:text-stone-950"
-              href="/account"
+              href="#proof"
             >
-              My Reports
+              Proof
             </a>
             <a
               className="btn-primary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold transition"
@@ -113,15 +108,10 @@ export default function Home() {
             >
               Get Full Audit
             </a>
+            <AuthHeaderActions className="flex items-center gap-3" />
           </div>
         </div>
         <div className="flex flex-wrap gap-3 md:hidden">
-          <a
-            className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
-            href="/sign-in"
-          >
-            Sign in
-          </a>
           <a
             className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
             href="#platform"
@@ -136,9 +126,9 @@ export default function Home() {
           </a>
           <a
             className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
-            href="/account"
+            href="#proof"
           >
-            My Reports
+            Proof
           </a>
           <a
             className="btn-primary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold transition"
@@ -146,6 +136,11 @@ export default function Home() {
           >
             Get Full Audit
           </a>
+          <AuthHeaderActions
+            buttonClassName="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
+            className="contents"
+            linkClassName="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
+          />
         </div>
 
         <section className="surface-panel app-fade-up relative overflow-hidden rounded-[2.8rem] px-6 py-8 md:px-10 md:py-12">
@@ -201,7 +196,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="surface-panel grid gap-6 rounded-[2.4rem] p-6 md:p-8 lg:grid-cols-[1.05fr_0.95fr]">
+      <section
+        className="surface-panel grid gap-6 rounded-[2.4rem] p-6 md:p-8 lg:grid-cols-[1.05fr_0.95fr]"
+        id="proof"
+      >
         <div className="grid gap-4">
           <div>
             <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
