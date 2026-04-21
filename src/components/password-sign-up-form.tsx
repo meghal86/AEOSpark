@@ -45,6 +45,50 @@ export function PasswordSignUpForm() {
     return match ? Number(match[1]) : 60;
   }
 
+  function isLocalhost() {
+    return (
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+    );
+  }
+
+  async function createLocalDevAccount(input: {
+    normalizedWebsite: string;
+    supabase: ReturnType<typeof createBrowserAuthClient>;
+  }) {
+    const response = await fetch("/api/auth/dev-sign-up", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password,
+        fullName,
+        companyName,
+        website: input.normalizedWebsite,
+      }),
+    });
+
+    const payload = (await response.json().catch(() => null)) as
+      | { success?: boolean; error?: string }
+      | null;
+
+    if (!response.ok || payload?.success === false) {
+      throw new Error(payload?.error || "Unable to create the local test account.");
+    }
+
+    const { error } = await input.supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    router.push("/account");
+    router.refresh();
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
@@ -102,6 +146,23 @@ export function PasswordSignUpForm() {
         error instanceof Error ? error.message : "Unable to create account.";
 
       if (/security purposes|rate limit|too many requests|email rate limit/i.test(errorMessage)) {
+        if (isLocalhost()) {
+          try {
+            await createLocalDevAccount({
+              normalizedWebsite: normalizePublicUrl(website),
+              supabase: createBrowserAuthClient(),
+            });
+            return;
+          } catch (localError) {
+            setMessage(
+              localError instanceof Error
+                ? localError.message
+                : "Unable to create the local test account.",
+            );
+            return;
+          }
+        }
+
         const seconds = secondsFromRateLimit(errorMessage);
         setCooldownSeconds(seconds);
         setMessage(
