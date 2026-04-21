@@ -30,7 +30,7 @@ export function ForgotPasswordForm() {
       const supabase = createBrowserAuthClient();
       const redirectTo =
         typeof window !== "undefined"
-          ? `${window.location.origin}/auth/confirm?next=/reset-password`
+          ? `${window.location.origin}/reset-password`
           : undefined;
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });

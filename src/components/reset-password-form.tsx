@@ -10,28 +10,70 @@ export function ResetPasswordForm() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [hasSession, setHasSession] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<"checking" | "ready" | "invalid">("checking");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function checkSession() {
+    function cleanResetUrl() {
+      window.history.replaceState(null, "", "/reset-password");
+    }
+
+    async function establishRecoverySession() {
       try {
         const supabase = createBrowserAuthClient();
-        const { data } = await supabase.auth.getSession();
-        if (!cancelled) {
-          setHasSession(Boolean(data.session));
+
+        const searchParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const urlError = searchParams.get("error_description") || hashParams.get("error_description");
+        const code = searchParams.get("code");
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+
+        if (urlError) {
+          throw new Error(urlError.replace(/\+/g, " "));
         }
-      } catch {
+
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            throw error;
+          }
+          cleanResetUrl();
+        } else if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) {
+            throw error;
+          }
+          cleanResetUrl();
+        }
+
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          throw error;
+        }
+
         if (!cancelled) {
-          setHasSession(false);
+          setStatus(data.session ? "ready" : "invalid");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setMessage(
+            error instanceof Error
+              ? error.message
+              : "This reset link has expired or is no longer valid.",
+          );
+          setStatus("invalid");
         }
       }
     }
 
-    void checkSession();
+    void establishRecoverySession();
 
     return () => {
       cancelled = true;
@@ -68,12 +110,12 @@ export function ResetPasswordForm() {
     }
   }
 
-  if (hasSession === false) {
+  if (status === "invalid") {
     return (
       <div className="grid gap-4">
         <p className="text-sm leading-7 text-stone-700">
-          This reset link has expired or is no longer valid. Request a new password reset email to
-          continue.
+          {message ||
+            "This reset link has expired or is no longer valid. Request a new password reset email to continue."}
         </p>
         <Link className="font-semibold text-stone-950 underline" href="/forgot-password">
           Request a new reset link
@@ -110,10 +152,14 @@ export function ResetPasswordForm() {
 
       <button
         className="btn-primary inline-flex h-14 items-center justify-center rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
-        disabled={isSubmitting || hasSession === null}
+        disabled={isSubmitting || status === "checking"}
         type="submit"
       >
-        {isSubmitting ? "Updating password..." : "Set new password"}
+        {isSubmitting
+          ? "Updating password..."
+          : status === "checking"
+            ? "Verifying reset link..."
+            : "Set new password"}
       </button>
 
       {message ? <p className="text-sm text-stone-600">{message}</p> : null}
