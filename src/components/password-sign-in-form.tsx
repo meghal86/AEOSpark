@@ -60,6 +60,7 @@ export function PasswordSignInForm() {
         Work email
         <input
           className="input-field h-14 rounded-2xl px-4 text-base"
+          autoComplete="email"
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@company.com"
           required
@@ -72,6 +73,7 @@ export function PasswordSignInForm() {
         Password
         <input
           className="input-field h-14 rounded-2xl px-4 text-base"
+          autoComplete="current-password"
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Your password"
           required
@@ -79,6 +81,10 @@ export function PasswordSignInForm() {
           value={password}
         />
       </label>
+
+      <p className="text-xs leading-6 text-stone-500">
+        Password sign-in is handled by Supabase over HTTPS. AEOSpark does not store your password.
+      </p>
 
       <button
         className="btn-primary inline-flex h-14 items-center justify-center rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"

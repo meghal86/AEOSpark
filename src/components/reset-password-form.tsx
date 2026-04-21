@@ -6,6 +6,16 @@ import { useRouter } from "next/navigation";
 
 import { createBrowserAuthClient } from "@/lib/supabase-browser-auth";
 
+function validatePassword(value: string) {
+  if (value.length < 8) {
+    throw new Error("Use at least 8 characters for your password.");
+  }
+
+  if (!/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/\d/.test(value)) {
+    throw new Error("Use uppercase, lowercase, and at least one number.");
+  }
+}
+
 export function ResetPasswordForm() {
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -86,13 +96,11 @@ export function ResetPasswordForm() {
     setMessage(null);
 
     try {
-      if (password.length < 8) {
-        throw new Error("Use at least 8 characters for your password.");
-      }
-
       if (password !== confirmPassword) {
         throw new Error("Passwords do not match.");
       }
+
+      validatePassword(password);
 
       const supabase = createBrowserAuthClient();
       const { error } = await supabase.auth.updateUser({ password });
@@ -130,6 +138,7 @@ export function ResetPasswordForm() {
         New password
         <input
           className="input-field h-14 rounded-2xl px-4 text-base"
+          autoComplete="new-password"
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Create a new password"
           required
@@ -142,6 +151,7 @@ export function ResetPasswordForm() {
         Confirm new password
         <input
           className="input-field h-14 rounded-2xl px-4 text-base"
+          autoComplete="new-password"
           onChange={(event) => setConfirmPassword(event.target.value)}
           placeholder="Confirm your new password"
           required
@@ -149,6 +159,10 @@ export function ResetPasswordForm() {
           value={confirmPassword}
         />
       </label>
+
+      <p className="text-xs leading-6 text-stone-500">
+        Use at least 8 characters with uppercase, lowercase, and a number.
+      </p>
 
       <button
         className="btn-primary inline-flex h-14 items-center justify-center rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"

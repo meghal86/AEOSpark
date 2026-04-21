@@ -6,6 +6,16 @@ import { useRouter } from "next/navigation";
 import { createBrowserAuthClient } from "@/lib/supabase-browser-auth";
 import { normalizePublicUrl } from "@/lib/url-security";
 
+function validatePassword(value: string) {
+  if (value.length < 8) {
+    throw new Error("Use at least 8 characters for your password.");
+  }
+
+  if (!/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/\d/.test(value)) {
+    throw new Error("Use uppercase, lowercase, and at least one number.");
+  }
+}
+
 export function PasswordSignUpForm() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
@@ -44,6 +54,8 @@ export function PasswordSignUpForm() {
       if (password !== confirmPassword) {
         throw new Error("Passwords do not match.");
       }
+
+      validatePassword(password);
 
       const normalizedWebsite = normalizePublicUrl(website);
       const supabase = createBrowserAuthClient();
@@ -109,6 +121,7 @@ export function PasswordSignUpForm() {
         Full name
         <input
           className="input-field h-14 rounded-2xl px-4 text-base"
+          autoComplete="name"
           onChange={(event) => setFullName(event.target.value)}
           placeholder="Your full name"
           required
@@ -121,6 +134,7 @@ export function PasswordSignUpForm() {
         Company name
         <input
           className="input-field h-14 rounded-2xl px-4 text-base"
+          autoComplete="organization"
           onChange={(event) => setCompanyName(event.target.value)}
           placeholder="Your company"
           required
@@ -133,6 +147,7 @@ export function PasswordSignUpForm() {
         Website
         <input
           className="input-field h-14 rounded-2xl px-4 text-base"
+          autoComplete="url"
           onChange={(event) => setWebsite(event.target.value)}
           placeholder="yourcompany.com"
           required
@@ -145,6 +160,7 @@ export function PasswordSignUpForm() {
         Work email
         <input
           className="input-field h-14 rounded-2xl px-4 text-base"
+          autoComplete="email"
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@company.com"
           required
@@ -157,6 +173,7 @@ export function PasswordSignUpForm() {
         Password
         <input
           className="input-field h-14 rounded-2xl px-4 text-base"
+          autoComplete="new-password"
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Create a password"
           required
@@ -169,6 +186,7 @@ export function PasswordSignUpForm() {
         Confirm password
         <input
           className="input-field h-14 rounded-2xl px-4 text-base"
+          autoComplete="new-password"
           onChange={(event) => setConfirmPassword(event.target.value)}
           placeholder="Confirm your password"
           required
@@ -176,6 +194,11 @@ export function PasswordSignUpForm() {
           value={confirmPassword}
         />
       </label>
+
+      <p className="text-xs leading-6 text-stone-500">
+        Use at least 8 characters with uppercase, lowercase, and a number. Passwords are sent
+        directly to Supabase over HTTPS and are not stored by AEOSpark.
+      </p>
 
       <button
         className="btn-primary inline-flex h-14 items-center justify-center rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
