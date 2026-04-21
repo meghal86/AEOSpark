@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AccountAccessForm } from "@/components/account-access-form";
 import { AccountTabs } from "@/components/account-tabs";
-import { PageUtilityNav } from "@/components/page-utility-nav";
+import { SiteHeader } from "@/components/site-header";
 import { listDeliveredReportsByEmail } from "@/lib/audit-delivery";
 import { createServerAuthClient } from "@/lib/supabase-auth";
 
@@ -14,7 +14,7 @@ async function signOut() {
 
   const supabase = await createServerAuthClient();
   await supabase.auth.signOut();
-  redirect("/account");
+  redirect("/sign-in?status=signed-out");
 }
 
 export default async function AccountPage() {
@@ -26,7 +26,7 @@ export default async function AccountPage() {
   if (!user?.email) {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-8 px-6 py-10 md:px-10">
-        <PageUtilityNav />
+        <SiteHeader />
         <section className="surface-panel rounded-[2.5rem] p-8">
           <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
             Report access
@@ -71,17 +71,7 @@ export default async function AccountPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10 md:px-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <PageUtilityNav />
-        <form action={signOut}>
-          <button
-            className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
-            type="submit"
-          >
-            Sign out
-          </button>
-        </form>
-      </div>
+      <SiteHeader />
 
       <AccountTabs
         profile={{

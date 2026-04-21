@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { BUYER_SESSION_KEY, readBuyerSession } from "@/lib/buyer-session";
 import { createBrowserAuthClient } from "@/lib/supabase-browser-auth";
 
@@ -87,10 +88,11 @@ export function PasswordSignInForm() {
       </p>
 
       <button
-        className="btn-primary inline-flex h-14 items-center justify-center rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
+        className="btn-primary inline-flex h-14 items-center justify-center gap-2 rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
         disabled={isSubmitting}
         type="submit"
       >
+        {isSubmitting && <LoadingSpinner size="sm" className="text-white/70" />}
         {isSubmitting ? "Signing in..." : "Sign in"}
       </button>
 

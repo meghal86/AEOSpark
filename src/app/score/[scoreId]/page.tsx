@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { EmailCaptureGate } from "@/components/email-capture-gate";
-import { PageUtilityNav } from "@/components/page-utility-nav";
 import { ShareScoreCard } from "@/components/share-score-card";
+import { SiteHeader } from "@/components/site-header";
 import { formatDate, percent, scoreGrade, scoreTone } from "@/lib/format";
 import { getScoreById } from "@/lib/storage";
 
@@ -55,7 +55,7 @@ export default async function ScorePage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-10 px-6 py-10 md:px-10">
-      <PageUtilityNav />
+      <SiteHeader />
       <section className="surface-panel app-fade-up grid gap-6 rounded-[2.4rem] p-6 lg:grid-cols-[1.25fr_0.75fr]">
         <div className="grid gap-5">
           <div className="flex flex-wrap items-center gap-3">

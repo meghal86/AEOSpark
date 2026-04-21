@@ -1,9 +1,9 @@
-import { PageUtilityNav } from "@/components/page-utility-nav";
+import { SiteHeader } from "@/components/site-header";
 
 export default function MonitorPage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-6 py-10 md:px-10">
-      <PageUtilityNav />
+      <SiteHeader />
       <section className="surface-panel app-fade-up grid gap-4 rounded-[2rem] p-6">
         <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
           Client portal

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AccountAccessForm } from "@/components/account-access-form";
-import { PageUtilityNav } from "@/components/page-utility-nav";
 import { PasswordSignUpForm } from "@/components/password-sign-up-form";
+import { SiteHeader } from "@/components/site-header";
 import { createServerAuthClient } from "@/lib/supabase-auth";
 
 export default async function SignUpPage() {
@@ -18,7 +18,7 @@ export default async function SignUpPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-8 px-6 py-10 md:px-10">
-      <PageUtilityNav />
+      <SiteHeader minimal />
 
       <section className="surface-panel rounded-[2.5rem] p-8">
         <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">

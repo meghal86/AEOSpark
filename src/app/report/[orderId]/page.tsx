@@ -1,8 +1,8 @@
 import { BuyerSessionSync } from "@/components/buyer-session-sync";
 import Link from "next/link";
 
-import { PageUtilityNav } from "@/components/page-utility-nav";
 import { ReportAutoRefresh } from "@/components/report-auto-refresh";
+import { SiteHeader } from "@/components/site-header";
 import { getAuditDeliveryByReference } from "@/lib/audit-delivery";
 import { appEnv } from "@/lib/env";
 import { formatDate } from "@/lib/format";
@@ -85,7 +85,7 @@ export default async function ReportPage({
   if (!delivery) {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10 md:px-10">
-        <PageUtilityNav />
+        <SiteHeader />
         <section className="surface-panel rounded-[2.5rem] p-8">
           <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
             Report unavailable
@@ -108,7 +108,7 @@ export default async function ReportPage({
   if (order.status === "pending" || order.status === "processing" || !report) {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10 md:px-10">
-        <PageUtilityNav />
+        <SiteHeader />
         <ReportAutoRefresh />
 
         <section className="surface-panel rounded-[2.5rem] p-8">
@@ -169,7 +169,7 @@ export default async function ReportPage({
         savedAt={new Date().toISOString()}
         status={order.status === "delivered" ? "delivered" : "processing"}
       />
-      <PageUtilityNav />
+      <SiteHeader />
 
       <section className="surface-panel grid gap-6 rounded-[2.5rem] p-6 lg:grid-cols-[240px_1fr] lg:p-8">
         <aside className="grid gap-4 self-start lg:sticky lg:top-8">
@@ -245,13 +245,13 @@ export default async function ReportPage({
                 },
                 {
                   label: report.competitor1 || "Top competitor",
-                  claude: `${Math.round(report.competitor1Share)}%`,
-                  chatgpt: `${Math.round(report.competitor1Share)}%`,
+                  claude: `${Math.round(report.competitor1ClaudeShare ?? report.competitor1Share)}%`,
+                  chatgpt: `${Math.round(report.competitor1ChatgptShare ?? report.competitor1Share)}%`,
                 },
                 {
                   label: report.competitor2 || "Second competitor",
-                  claude: `${Math.round(report.competitor2Share)}%`,
-                  chatgpt: `${Math.round(report.competitor2Share)}%`,
+                  claude: `${Math.round(report.competitor2ClaudeShare ?? report.competitor2Share)}%`,
+                  chatgpt: `${Math.round(report.competitor2ChatgptShare ?? report.competitor2Share)}%`,
                 },
               ].map((row, index) => (
                 <div
@@ -264,6 +264,13 @@ export default async function ReportPage({
                 </div>
               ))}
             </div>
+            {report.marginOfError != null && report.marginOfError > 0 && (
+              <div className="mt-4 rounded-[1.2rem] border border-stone-200 bg-stone-50/60 px-4 py-3 text-xs leading-6 text-stone-600">
+                Score confidence: these numbers carry an estimated margin of error of
+                {" "}±{report.marginOfError}% based on variance across {report.queryResults.length} queries.
+                AI responses are non-deterministic — re-running may produce slightly different results.
+              </div>
+            )}
             <p className="mt-5 text-sm leading-7 text-stone-700">{report.executiveSummary}</p>
           </section>
 

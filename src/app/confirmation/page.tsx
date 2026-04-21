@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AccountAccessForm } from "@/components/account-access-form";
 import { BuyerSessionSync } from "@/components/buyer-session-sync";
-import { PageUtilityNav } from "@/components/page-utility-nav";
+import { SiteHeader } from "@/components/site-header";
 import { appEnv } from "@/lib/env";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getStripe } from "@/lib/stripe";
@@ -121,7 +121,7 @@ export default async function ConfirmationPage({
               : "pending"
         }
       />
-      <PageUtilityNav />
+      <SiteHeader />
 
       <section className="surface-panel app-fade-up grid gap-6 rounded-[2.5rem] p-6 lg:grid-cols-[1.18fr_0.82fr] lg:p-8">
         <div className="grid gap-6 self-start">

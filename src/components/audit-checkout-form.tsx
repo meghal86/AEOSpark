@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { LoadingSpinner } from "@/components/loading-spinner";
+
 export function AuditCheckoutForm(props: {
   companyName: string;
   defaultEmail: string;
@@ -121,12 +123,13 @@ export function AuditCheckoutForm(props: {
           </label>
 
           <button
-            className="btn-primary mt-1 inline-flex h-14 items-center justify-center rounded-[1.35rem] text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn-primary mt-1 inline-flex h-14 items-center justify-center gap-2 rounded-[1.35rem] text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSubmitting}
             onClick={() => submit()}
             type="button"
           >
-            {isSubmitting ? "Redirecting..." : "Get My Full Audit"}
+            {isSubmitting && <LoadingSpinner size="sm" className="text-white/70" />}
+            {isSubmitting ? "Redirecting to checkout..." : "Get My Full Audit — $997"}
           </button>
 
           {error ? <p className="status-danger text-sm">{error}</p> : null}

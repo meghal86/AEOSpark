@@ -25,9 +25,11 @@ export async function AuthHeaderActions(props: {
         <Link className={linkClassName} href="/account">
           My Reports
         </Link>
-        <Link className={buttonClassName} href="/sign-out">
-          Sign out
-        </Link>
+        <form action="/sign-out" method="POST" className="inline-flex">
+          <button className={buttonClassName} type="submit">
+            Sign out
+          </button>
+        </form>
       </div>
     );
   }

@@ -176,3 +176,39 @@ a {
     transform: translateY(0);
   }
 }
+
+.app-skeleton-pulse {
+  animation: skeleton-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.app-slide-down {
+  animation: slide-down 0.3s ease-out both;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.app-stagger-in > * {
+  animation: app-fade-up 0.45s ease-out both;
+}
+
+.app-stagger-in > *:nth-child(1) { animation-delay: 0s; }
+.app-stagger-in > *:nth-child(2) { animation-delay: 0.06s; }
+.app-stagger-in > *:nth-child(3) { animation-delay: 0.12s; }
+.app-stagger-in > *:nth-child(4) { animation-delay: 0.18s; }
+.app-stagger-in > *:nth-child(5) { animation-delay: 0.24s; }
+.app-stagger-in > *:nth-child(6) { animation-delay: 0.3s; }
+.app-stagger-in > *:nth-child(7) { animation-delay: 0.36s; }

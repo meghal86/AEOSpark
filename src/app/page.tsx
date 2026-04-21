@@ -1,7 +1,7 @@
 import { PurchasedHomeBanner } from "@/components/purchased-home-banner";
+import { SiteHeader } from "@/components/site-header";
 import { UrlIntakeForm } from "@/components/url-intake-form";
 import { FounderTrustCard } from "@/components/founder-trust-card";
-import { AuthHeaderActions } from "@/components/auth-header-actions";
 import { pilotProof } from "@/lib/site-proof";
 
 const howItWorks = [
@@ -77,109 +77,52 @@ const caseStudyStats = [
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-12 px-6 py-8 md:px-10 md:py-10">
-      <header className="flex flex-col gap-5">
-        <div className="flex items-center justify-between gap-4">
-          <div className="ui-chip inline-flex items-center gap-3 rounded-full px-4 py-2 text-sm backdrop-blur">
-            <span className="h-2.5 w-2.5 rounded-full bg-[var(--accent)]" />
-            AEOSpark
-          </div>
-          <div className="hidden items-center gap-5 md:flex">
-            <a
-              className="text-sm font-semibold text-stone-700 transition hover:text-stone-950"
-              href="#platform"
-            >
-              How it works
-            </a>
-            <a
-              className="text-sm font-semibold text-stone-700 transition hover:text-stone-950"
-              href="#signals"
-            >
-              Signals
-            </a>
-            <a
-              className="text-sm font-semibold text-stone-700 transition hover:text-stone-950"
-              href="#proof"
-            >
-              Proof
-            </a>
-            <a
-              className="btn-primary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold transition"
-              href="/checkout/audit"
-            >
-              Get Full Audit
-            </a>
-            <AuthHeaderActions className="flex items-center gap-3" />
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-3 md:hidden">
-          <a
-            className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
-            href="#platform"
-          >
-            How it works
-          </a>
-          <a
-            className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
-            href="#signals"
-          >
-            Signals
-          </a>
-          <a
-            className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
-            href="#proof"
-          >
-            Proof
-          </a>
-          <a
-            className="btn-primary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold transition"
-            href="/checkout/audit"
-          >
-            Get Full Audit
-          </a>
-          <AuthHeaderActions
-            buttonClassName="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
-            className="contents"
-            linkClassName="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
-          />
-        </div>
+      <SiteHeader
+        navLinks={[
+          { href: "#platform", label: "How it works" },
+          { href: "#signals", label: "Signals" },
+          { href: "#proof", label: "Proof" },
+        ]}
+        ctaLabel="Get Full Audit"
+        ctaHref="/checkout/audit"
+      />
 
-        <section className="surface-panel app-fade-up relative overflow-hidden rounded-[2.8rem] px-6 py-8 md:px-10 md:py-12">
-          <div className="absolute inset-y-0 right-0 hidden w-[30rem] bg-[radial-gradient(circle_at_center,_rgba(168,124,92,0.12),_transparent_68%)] blur-2xl lg:block" />
-          <div className="grid gap-10 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="relative z-10 grid gap-7">
-              <div className="ui-chip ui-kicker inline-flex w-fit items-center rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em]">
-                Free AI Visibility Check
-              </div>
-
-              <div>
-                <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-stone-950 md:text-7xl md:leading-[0.95]">
-                  See what ChatGPT recommends instead of you.
-                </h1>
-                <p className="mt-5 max-w-2xl text-base leading-8 text-stone-700 md:text-lg">
-                  Paste your URL and a competitor URL to see where AI assistants
-                  recommend them over you. Get your score in under a minute. No
-                  sign-up required.
-                </p>
-              </div>
+      <section className="surface-panel app-fade-up relative overflow-hidden rounded-[2.8rem] px-6 py-8 md:px-10 md:py-12">
+        <div className="absolute inset-y-0 right-0 hidden w-[30rem] bg-[radial-gradient(circle_at_center,_rgba(168,124,92,0.12),_transparent_68%)] blur-2xl lg:block" />
+        <div className="grid gap-10 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="relative z-10 grid gap-7">
+            <div className="ui-chip ui-kicker inline-flex w-fit items-center rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em]">
+              Free AI Visibility Check
             </div>
 
-            <div className="relative z-10 self-end" id="intake">
-              <div className="mb-4 flex flex-wrap gap-3">
-                <div className="ui-chip rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em]">
-                  Live score
-                </div>
-                <div className="ui-chip rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em]">
-                  See competitor gap
-                </div>
-              </div>
-              <UrlIntakeForm />
-              <p className="mt-4 text-sm text-stone-700">
-                Free forever · No account needed · Results in 60 seconds
+            <div>
+              <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-stone-950 md:text-7xl md:leading-[0.95]">
+                See what ChatGPT recommends instead of you.
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-8 text-stone-700 md:text-lg">
+                Paste your URL and a competitor URL to see where AI assistants
+                recommend them over you. Get your score in under a minute. No
+                sign-up required.
               </p>
             </div>
           </div>
-        </section>
-      </header>
+
+          <div className="relative z-10 self-end" id="intake">
+            <div className="mb-4 flex flex-wrap gap-3">
+              <div className="ui-chip rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em]">
+                Live score
+              </div>
+              <div className="ui-chip rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em]">
+                See competitor gap
+              </div>
+            </div>
+            <UrlIntakeForm />
+            <p className="mt-4 text-sm text-stone-700">
+              Free forever · No account needed · Results in 60 seconds
+            </p>
+          </div>
+        </div>
+      </section>
 
       <PurchasedHomeBanner />
 
@@ -285,9 +228,7 @@ export default function Home() {
                   {item.query}
                 </div>
                 <div
-                  className={`px-4 py-4 text-sm font-semibold ${item.claudeTone} ${
-                    index % 2 === 0 ? "" : ""
-                  }`}
+                  className={`px-4 py-4 text-sm font-semibold ${item.claudeTone}`}
                 >
                   {item.claude}
                 </div>

@@ -1,5 +1,5 @@
-import { PageUtilityNav } from "@/components/page-utility-nav";
 import { ScoreRunner } from "@/components/score-runner";
+import { SiteHeader } from "@/components/site-header";
 
 function decodeValue(value?: string | string[]) {
   if (!value) {
@@ -18,7 +18,7 @@ export default async function ScoreEntryPage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-10 px-6 py-10 md:px-10">
-      <PageUtilityNav />
+      <SiteHeader />
       <ScoreRunner url={url} />
     </main>
   );

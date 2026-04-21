@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { PageUtilityNav } from "@/components/page-utility-nav";
+import { SiteHeader } from "@/components/site-header";
 import { getAuditByOrderId, getOrderById } from "@/lib/storage";
 
 export default async function AuditPage({
@@ -21,7 +21,7 @@ export default async function AuditPage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-10">
-      <PageUtilityNav />
+      <SiteHeader />
       <section className="surface-panel app-fade-up grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div>
           <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
