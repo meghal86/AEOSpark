@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createBrowserAuthClient } from "@/lib/supabase-browser-auth";
@@ -16,6 +16,24 @@ export function PasswordSignUpForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+
+  useEffect(() => {
+    if (cooldownSeconds <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setCooldownSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [cooldownSeconds]);
+
+  function secondsFromRateLimit(messageText: string) {
+    const match = messageText.match(/after\s+(\d+)\s+seconds?/i);
+    return match ? Number(match[1]) : 60;
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -68,7 +86,18 @@ export function PasswordSignUpForm() {
         "Account created. Check your email to confirm your account, then sign in.",
       );
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to create account.");
+      const errorMessage =
+        error instanceof Error ? error.message : "Unable to create account.";
+
+      if (/security purposes|rate limit|too many requests|email rate limit/i.test(errorMessage)) {
+        const seconds = secondsFromRateLimit(errorMessage);
+        setCooldownSeconds(seconds);
+        setMessage(
+          `Supabase is temporarily limiting account emails for this project. Wait ${seconds} seconds, then try again once. If you already requested a confirmation email, check inbox and spam first.`,
+        );
+      } else {
+        setMessage(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -150,10 +179,14 @@ export function PasswordSignUpForm() {
 
       <button
         className="btn-primary inline-flex h-14 items-center justify-center rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
-        disabled={isSubmitting}
+        disabled={isSubmitting || cooldownSeconds > 0}
         type="submit"
       >
-        {isSubmitting ? "Creating account..." : "Create account"}
+        {isSubmitting
+          ? "Creating account..."
+          : cooldownSeconds > 0
+            ? `Try again in ${cooldownSeconds}s`
+            : "Create account"}
       </button>
 
       {message ? <p className="text-sm leading-7 text-stone-600">{message}</p> : null}

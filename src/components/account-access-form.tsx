@@ -21,6 +21,7 @@ export function AccountAccessForm(props?: {
   const [website, setWebsite] = useState(props?.defaultWebsite || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
   useEffect(() => {
     if (props?.defaultEmail || typeof window === "undefined") {
@@ -32,6 +33,23 @@ export function AccountAccessForm(props?: {
       setEmail((current) => current || stored.email);
     }
   }, [props?.defaultEmail]);
+
+  useEffect(() => {
+    if (cooldownSeconds <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setCooldownSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [cooldownSeconds]);
+
+  function secondsFromRateLimit(messageText: string) {
+    const match = messageText.match(/after\s+(\d+)\s+seconds?/i);
+    return match ? Number(match[1]) : 60;
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,9 +78,18 @@ export function AccountAccessForm(props?: {
 
       setMessage(props?.successMessage || "Check your email for the access link.");
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Unable to send the access link.",
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : "Unable to send the access link.";
+
+      if (/security purposes|rate limit|too many requests|email rate limit/i.test(errorMessage)) {
+        const seconds = secondsFromRateLimit(errorMessage);
+        setCooldownSeconds(seconds);
+        setMessage(
+          `Supabase is temporarily limiting email links for this project. Wait ${seconds} seconds, then request one new link. If an email arrives, use the newest link only.`,
+        );
+      } else {
+        setMessage(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -130,15 +157,17 @@ export function AccountAccessForm(props?: {
 
       <button
         className="btn-primary inline-flex h-14 items-center justify-center rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
-        disabled={isSubmitting}
+        disabled={isSubmitting || cooldownSeconds > 0}
         type="submit"
       >
         {isSubmitting
           ? "Sending access link..."
-          : props?.submitLabel || "Send access link →"}
+          : cooldownSeconds > 0
+            ? `Try again in ${cooldownSeconds}s`
+            : props?.submitLabel || "Send access link →"}
       </button>
 
-      {message ? <p className="text-sm text-stone-600">{message}</p> : null}
+      {message ? <p className="text-sm leading-7 text-stone-600">{message}</p> : null}
     </form>
   );
 }
