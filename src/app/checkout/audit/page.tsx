@@ -22,151 +22,186 @@ export default async function AuditCheckoutPage({
   const scoreId = decodeValue(resolved.scoreId);
   const email = decodeValue(resolved.email);
   const name = decodeValue(resolved.name);
-  const reportPreview = [
+  const reportSections = [
     {
-      title: "Section 1",
       heading: "Lost prompt map",
       detail:
-        "A ranked list of high-intent AI prompts where your competitors are currently cited instead of you.",
+        "A ranked list of high-intent AI prompts where competitors are cited instead of you.",
     },
     {
-      title: "Section 2",
       heading: "Competitor proof",
       detail:
-        "Named competitor gaps, example AI responses, and the structural reasons they are being recommended first.",
+        "Named competitor gaps, example AI responses, and the structural reasons they win.",
     },
     {
-      title: "Section 3",
       heading: "30/60/90-day roadmap",
       detail:
-        "A concrete implementation sequence so the team knows what to publish, fix, and validate first.",
+        "A concrete implementation sequence — what to publish, fix, and validate first.",
     },
-  ];
-  const proofStats = [
-    { label: "Before", value: `${pilotProof.beforeCitationShare} citation share` },
-    { label: "After", value: `${pilotProof.afterCitationShare} citation share` },
-    { label: "Window", value: pilotProof.timeframe },
   ];
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-10 md:py-12">
+    <main className="mx-auto w-full max-w-6xl px-6 py-6 md:px-10 md:py-10">
       <SiteHeader />
 
-      <section className="surface-panel app-fade-up grid gap-6 rounded-[2.4rem] p-6 lg:grid-cols-[1.15fr_0.85fr] lg:p-8">
-        <div className="grid gap-4 self-start">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
-            Full audit
-          </p>
-          <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-stone-950 md:text-5xl">
-            Get your AI visibility audit
-          </h1>
-          <p className="max-w-2xl text-base leading-7 text-stone-700">
-            Move from a score snapshot to an operator-grade report that shows
-            where AI assistants recommend competitors instead of you, why that
-            happens, and what to fix first.
-          </p>
-        </div>
+      {/* ──────────────────────────────────────────────────────────────── */}
+      {/*  Headline                                                          */}
+      {/* ──────────────────────────────────────────────────────────────── */}
+      <section className="app-fade-up pt-16 pb-12 md:pt-24">
+        <span className="ui-kicker">Full audit</span>
+        <h1 className="mt-4 max-w-4xl text-5xl tracking-tight md:text-6xl">
+          Get your AI visibility audit.
+        </h1>
+        <p className="mt-5 max-w-2xl text-lg leading-relaxed">
+          Move from a score snapshot to an operator-grade report: the exact
+          prompts where AI recommends competitors instead of you, why, and
+          what to fix first.
+        </p>
 
-        <div className="surface-card rounded-[2rem] p-6">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em]">
-            Audit package
-          </p>
-          <div className="mt-5 grid gap-3 text-sm text-stone-700">
-            <p>$997 one-time payment</p>
-            <p>Delivered within 24 hours</p>
-            <p>PDF report, competitor analysis, and strategy call</p>
+        <dl className="mt-10 grid max-w-3xl grid-cols-1 gap-8 border-t border-[var(--border)] pt-8 md:grid-cols-3">
+          <div className="grid gap-1">
+            <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+              Investment
+            </dt>
+            <dd className="font-display text-3xl tracking-tight text-[var(--foreground)]">
+              $997
+            </dd>
+            <dd className="text-sm text-[var(--foreground-muted)]">One-time payment</dd>
           </div>
-        </div>
+          <div className="grid gap-1">
+            <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+              Delivery
+            </dt>
+            <dd className="font-display text-3xl tracking-tight text-[var(--foreground)]">
+              24 hrs
+            </dd>
+            <dd className="text-sm text-[var(--foreground-muted)]">After checkout</dd>
+          </div>
+          <div className="grid gap-1">
+            <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+              Format
+            </dt>
+            <dd className="font-display text-3xl tracking-tight text-[var(--foreground)]">
+              PDF + tracking
+            </dd>
+            <dd className="text-sm text-[var(--foreground-muted)]">
+              90-day measurement window
+            </dd>
+          </div>
+        </dl>
       </section>
 
-      <section className="surface-panel grid gap-5 rounded-[2rem] p-6">
-        <div className="grid gap-2">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
-            What arrives in the report
-          </p>
-          <h2 className="text-2xl font-semibold text-stone-950">
+      <hr className="section-divider" />
+
+      {/* ──────────────────────────────────────────────────────────────── */}
+      {/*  What's in the report                                              */}
+      {/* ──────────────────────────────────────────────────────────────── */}
+      <section className="py-20 md:py-24">
+        <div className="section-header">
+          <span className="ui-kicker">Inside the report</span>
+          <h2 className="text-4xl md:text-5xl">
             A buying-grade deliverable, not a recycled score page.
           </h2>
-          <p className="max-w-3xl text-sm leading-7 text-stone-700">
-            The paid audit is designed to answer the questions leadership
-            actually asks: which prompts are we losing, which competitors are
-            winning those prompts, and what specific changes should the team make
-            in the next 90 days.
+          <p className="mt-2 text-base leading-relaxed">
+            Built to answer the three questions leadership actually asks: which
+            prompts are we losing, which competitors are winning them, and what
+            do we ship in the next 90 days.
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          {reportPreview.map((item) => (
-            <article className="surface-card rounded-[1.8rem] p-5" key={item.heading}>
-              <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em]">
-                {item.title}
-              </p>
-              <h3 className="mt-3 text-lg font-semibold text-stone-950">
+        <div className="mt-14 grid gap-10 md:grid-cols-3">
+          {reportSections.map((item, index) => (
+            <article key={item.heading} className="grid gap-3">
+              <span className="font-display text-3xl tracking-tight text-[var(--accent)]">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <h3 className="text-xl font-medium text-[var(--foreground)]">
                 {item.heading}
               </h3>
-              <p className="mt-3 text-sm leading-7 text-stone-700">{item.detail}</p>
+              <p className="text-base leading-relaxed">{item.detail}</p>
             </article>
           ))}
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="mt-12 flex flex-wrap gap-3">
           <a
-            className="btn-secondary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
+            className="btn-ghost inline-flex h-11 items-center gap-2 rounded-[var(--radius-md)] px-4 text-sm font-semibold transition"
             href="/proof/sample-audit-report.html"
             rel="noreferrer"
             target="_blank"
           >
-            Open Sample Audit
+            Open sample audit →
           </a>
           <a
-            className="btn-secondary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
+            className="btn-ghost inline-flex h-11 items-center gap-2 rounded-[var(--radius-md)] px-4 text-sm font-semibold transition"
             href="/proof/citation-share-story.html"
             rel="noreferrer"
             target="_blank"
           >
-            View Citation Story
+            View citation story →
           </a>
         </div>
       </section>
 
-      <section className="surface-panel grid gap-5 rounded-[2rem] p-6">
-        <div className="grid gap-2">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
-            Proof and founder
-          </p>
-          <h2 className="text-2xl font-semibold text-stone-950">
-            One real result and one accountable human behind the work.
-          </h2>
-        </div>
+      <hr className="section-divider" />
 
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="grid gap-4">
-            <div className="grid gap-4 md:grid-cols-3">
-              {proofStats.map((item) => (
-                <div className="surface-card rounded-[1.7rem] p-5" key={item.label}>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
-                    {item.label}
-                  </p>
-                  <p className="mt-3 text-2xl font-semibold text-stone-950">{item.value}</p>
-                </div>
-              ))}
-            </div>
-            <p className="text-sm leading-7 text-stone-700">
+      {/* ──────────────────────────────────────────────────────────────── */}
+      {/*  Proof + founder                                                   */}
+      {/* ──────────────────────────────────────────────────────────────── */}
+      <section className="py-20 md:py-24">
+        <div className="grid gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+          <div className="grid gap-6">
+            <span className="ui-kicker">Proof point</span>
+            <h2 className="text-4xl md:text-5xl">
+              One real result behind the work.
+            </h2>
+            <p className="text-base leading-relaxed">
               In the AlphaWhale case study, the work was not &ldquo;add schema and hope.&rdquo;
               It was identifying the prompts that mattered, tightening direct-answer
               pages, and improving trust proof where competitors were winning mentions.
             </p>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
-              Honest positioning: this is a pilot-style proof point, not a claim of broad historical scale.
+
+            <dl className="mt-2 grid grid-cols-3 gap-6 border-t border-[var(--border)] pt-8">
+              <div className="grid gap-1">
+                <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+                  Before
+                </dt>
+                <dd className="font-display text-2xl tracking-tight text-[var(--foreground)]">
+                  {pilotProof.beforeCitationShare}
+                </dd>
+              </div>
+              <div className="grid gap-1">
+                <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+                  After
+                </dt>
+                <dd className="font-display text-2xl tracking-tight text-[var(--accent)]">
+                  {pilotProof.afterCitationShare}
+                </dd>
+              </div>
+              <div className="grid gap-1">
+                <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+                  Window
+                </dt>
+                <dd className="font-display text-2xl tracking-tight text-[var(--foreground)]">
+                  {pilotProof.timeframe}
+                </dd>
+              </div>
+            </dl>
+
+            <p className="text-xs text-[var(--foreground-subtle)]">
+              Honest positioning: a pilot-style proof point, not a claim of broad historical scale.
             </p>
-            <a
-              className="btn-secondary inline-flex h-12 w-fit items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
-              href="/proof/alphawhale-case-study.html"
-              rel="noreferrer"
-              target="_blank"
-            >
-              Read Case Study
-            </a>
+
+            <div>
+              <a
+                className="btn-ghost inline-flex h-11 items-center rounded-[var(--radius-md)] px-4 text-sm font-semibold transition"
+                href="/proof/alphawhale-case-study.html"
+                rel="noreferrer"
+                target="_blank"
+              >
+                Read case study →
+              </a>
+            </div>
           </div>
 
           <div className="self-start">
@@ -175,13 +210,20 @@ export default async function AuditCheckoutPage({
         </div>
       </section>
 
-      <AuditCheckoutForm
-        companyName={companyName}
-        defaultEmail={email}
-        defaultName={name}
-        scoreId={scoreId}
-        website={website}
-      />
+      <hr className="section-divider" />
+
+      {/* ──────────────────────────────────────────────────────────────── */}
+      {/*  Checkout form                                                     */}
+      {/* ──────────────────────────────────────────────────────────────── */}
+      <section className="py-20 md:py-24">
+        <AuditCheckoutForm
+          companyName={companyName}
+          defaultEmail={email}
+          defaultName={name}
+          scoreId={scoreId}
+          website={website}
+        />
+      </section>
     </main>
   );
 }

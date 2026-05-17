@@ -47,20 +47,58 @@ model Lead {
 }
 
 model Order {
-  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email                 String
   name                  String?
   url                   String
-  stripePaymentIntentId String        @unique @map("stripe_payment_intent_id")
-  amountCents           Int?          @default(99700) @map("amount_cents")
-  status                String?       @default("pending")
-  reportUrl             String?       @map("report_url")
-  calendlyBooked        Boolean?      @default(false) @map("calendly_booked")
-  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  deliveredAt           DateTime?     @map("delivered_at") @db.Timestamptz(6)
+  stripePaymentIntentId String         @unique @map("stripe_payment_intent_id")
+  amountCents           Int?           @default(99700) @map("amount_cents")
+  status                String?        @default("pending")
+  reportUrl             String?        @map("report_url")
+  calendlyBooked        Boolean?       @default(false) @map("calendly_booked")
+  userId                String?        @map("user_id") @db.Uuid
+  measurementWindowEndsAt DateTime?    @map("measurement_window_ends_at") @db.Timestamptz(6)
+  createdAt             DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  deliveredAt           DateTime?      @map("delivered_at") @db.Timestamptz(6)
   auditResults          AuditResult[]
+  scoreHistory          ScoreHistory[]
 
+  @@index([userId])
+  @@index([email])
   @@map("orders")
+}
+
+model ScoreHistory {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  domain          String
+  orderId         String?  @map("order_id") @db.Uuid
+  runNumber       Int      @default(1) @map("run_number")
+  citationClaude  Float    @map("citation_claude")
+  citationChatgpt Float    @map("citation_chatgpt")
+  comp1Domain     String?  @map("comp1_domain")
+  comp1Share      Float?   @map("comp1_share")
+  comp2Domain     String?  @map("comp2_domain")
+  comp2Share      Float?   @map("comp2_share")
+  queryResults    Json?    @map("query_results")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  order           Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([orderId, runNumber])
+  @@map("score_history")
+}
+
+model UserProfile {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  email     String   @unique
+  name      String?
+  company   String?
+  website   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("user_profiles")
 }
 
 model AuditResult {

@@ -27,74 +27,92 @@ type AccountProfile = {
 export function AccountTabs(props: {
   reports: ReportSummary[];
   profile: AccountProfile;
+  signOutAction?: () => Promise<void>;
 }) {
   const [tab, setTab] = useState<"documents" | "profile">("documents");
 
   return (
-    <section className="surface-panel rounded-[2.5rem] p-8">
-      <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
-        Buyer account
-      </p>
-      <h1 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950">
-        Your account
-      </h1>
-      <p className="mt-4 max-w-3xl text-base leading-7 text-stone-700">
-        Signed in as <span className="font-semibold text-stone-950">{props.profile.email}</span>.
-      </p>
+    <section className="app-fade-up pt-16 pb-24 md:pt-24">
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <span className="ui-kicker">Account</span>
+          <h1 className="mt-4 text-5xl tracking-tight md:text-6xl">
+            Your reports.
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-relaxed">
+            Signed in as{" "}
+            <span className="font-medium text-[var(--foreground)]">
+              {props.profile.email}
+            </span>
+            .
+          </p>
+        </div>
 
-      <div className="mt-8 flex flex-wrap gap-3">
-        <button
-          className={`inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition ${
-            tab === "documents" ? "btn-primary" : "btn-secondary"
-          }`}
+        {props.signOutAction ? (
+          <form action={props.signOutAction}>
+            <button
+              className="btn-ghost inline-flex h-10 items-center justify-center rounded-[var(--radius-sm)] px-4 text-sm font-medium transition"
+              type="submit"
+            >
+              Sign out →
+            </button>
+          </form>
+        ) : null}
+      </div>
+
+      <div className="mt-12 flex items-center gap-8 border-b border-[var(--border)]">
+        <TabButton
+          active={tab === "documents"}
+          label="Documents"
+          count={props.reports.length}
           onClick={() => setTab("documents")}
-          type="button"
-        >
-          Documents
-        </button>
-        <button
-          className={`inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition ${
-            tab === "profile" ? "btn-primary" : "btn-secondary"
-          }`}
+        />
+        <TabButton
+          active={tab === "profile"}
+          label="Profile"
           onClick={() => setTab("profile")}
-          type="button"
-        >
-          Profile
-        </button>
+        />
       </div>
 
       {tab === "documents" ? (
         props.reports.length ? (
-          <div className="mt-8 grid gap-4">
-            {props.reports.map((item) => (
+          <div className="mt-2 grid gap-0">
+            {props.reports.map((item, index) => (
               <article
-                className="surface-card grid gap-4 rounded-[2rem] p-6 md:grid-cols-[1fr_auto]"
                 key={item.orderId}
+                className="grid grid-cols-[auto_1fr_auto] items-center gap-8 border-b border-[var(--border)] py-8"
               >
-                <div className="grid gap-3">
-                  <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.18em]">
+                <span className="font-display text-3xl tracking-tight text-[var(--foreground-subtle)]">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+
+                <div className="grid gap-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
                     {item.domain}
+                  </span>
+                  <p className="text-xl font-medium text-[var(--foreground)]">
+                    AI visibility audit
                   </p>
-                  <h2 className="text-2xl font-semibold text-stone-950">
-                    AI visibility audit report
-                  </h2>
-                  <p className="text-sm leading-7 text-stone-700">
-                    Delivered on {formatDate(item.deliveredAt)}.
-                    {item.report
-                      ? ` Claude cited you in ${item.report.claudeCited}/20 queries and ChatGPT cited you in ${item.report.chatgptCited}/20.`
-                      : " Your report is ready to review."}
+                  <p className="text-sm text-[var(--foreground-muted)]">
+                    Delivered on {formatDate(item.deliveredAt)}
+                    {item.report ? (
+                      <>
+                        {" · "}Claude {item.report.claudeCited}/20, ChatGPT{" "}
+                        {item.report.chatgptCited}/20
+                      </>
+                    ) : null}
                   </p>
                 </div>
 
-                <div className="grid gap-3 md:min-w-56">
+                <div className="flex flex-col items-end gap-2">
                   <Link
-                    className="btn-primary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
+                    className="btn-accent inline-flex h-10 items-center justify-center rounded-[var(--radius-sm)] px-5 text-sm font-semibold transition"
                     href={`/report/${item.reference}`}
                   >
-                    View Report →
+                    Open report →
                   </Link>
                   <Link
-                    className="btn-secondary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
+                    className="text-xs font-medium text-[var(--foreground-muted)] transition hover:text-[var(--foreground)]"
                     href={`/api/reports/${item.reference}/download`}
                     target="_blank"
                   >
@@ -105,47 +123,87 @@ export function AccountTabs(props: {
             ))}
           </div>
         ) : (
-          <div className="mt-8 rounded-[1.8rem] border border-stone-200 bg-stone-50/80 px-5 py-5 text-sm leading-7 text-stone-700">
-            No documents yet. Your completed audits will appear under this tab automatically.
+          <div className="mt-16 grid place-items-center py-16 text-center">
+            <span className="ui-kicker">No documents yet</span>
+            <p className="mt-4 max-w-md text-sm leading-relaxed">
+              Completed audits appear here automatically. Start with a score and
+              upgrade to the full audit when you&rsquo;re ready.
+            </p>
+            <Link
+              className="btn-accent mt-6 inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] px-5 text-sm font-semibold transition"
+              href="/"
+            >
+              Run a score →
+            </Link>
           </div>
         )
       ) : (
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <div className="surface-card rounded-[2rem] p-6">
-            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.18em]">
-              Account owner
-            </p>
-            <div className="mt-4 grid gap-3 text-sm leading-7 text-stone-700">
-              <p>
-                <span className="font-semibold text-stone-950">Name:</span>{" "}
-                {props.profile.fullName || "Not set"}
-              </p>
-              <p>
-                <span className="font-semibold text-stone-950">Email:</span>{" "}
-                {props.profile.email}
-              </p>
-              <p>
-                <span className="font-semibold text-stone-950">Company:</span>{" "}
-                {props.profile.companyName || "Not set"}
-              </p>
-              <p>
-                <span className="font-semibold text-stone-950">Website:</span>{" "}
-                {props.profile.website || "Not set"}
-              </p>
-            </div>
+        <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_1px_1fr]">
+          <div>
+            <span className="ui-kicker">Account owner</span>
+            <dl className="mt-6 grid gap-4 text-sm">
+              <ProfileRow label="Name" value={props.profile.fullName || "—"} />
+              <ProfileRow label="Email" value={props.profile.email} />
+              <ProfileRow label="Company" value={props.profile.companyName || "—"} />
+              <ProfileRow label="Website" value={props.profile.website || "—"} />
+            </dl>
           </div>
 
-          <div className="surface-card rounded-[2rem] p-6">
-            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.18em]">
-              Documents sync
-            </p>
-            <p className="mt-4 text-sm leading-7 text-stone-700">
-              AEOSpark pulls your documents from Supabase based on the signed-in account email.
-              Any delivered audit tied to this email appears under the Documents tab automatically.
+          <div className="hidden bg-[var(--border)] lg:block" aria-hidden />
+
+          <div>
+            <span className="ui-kicker">Documents sync</span>
+            <p className="mt-6 text-sm leading-relaxed">
+              AEOSpark pulls your documents from Supabase based on the signed-in
+              account email. Any delivered audit tied to this email appears
+              under Documents automatically.
             </p>
           </div>
         </div>
       )}
     </section>
+  );
+}
+
+function TabButton(props: {
+  active: boolean;
+  label: string;
+  count?: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={props.onClick}
+      type="button"
+      className={`group -mb-px flex items-baseline gap-2 border-b-2 pb-4 text-sm font-medium transition ${
+        props.active
+          ? "border-[var(--accent)] text-[var(--foreground)]"
+          : "border-transparent text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
+      }`}
+    >
+      {props.label}
+      {props.count != null ? (
+        <span
+          className={`text-xs font-semibold ${
+            props.active
+              ? "text-[var(--accent)]"
+              : "text-[var(--foreground-subtle)]"
+          }`}
+        >
+          {props.count}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+function ProfileRow(props: { label: string; value: string }) {
+  return (
+    <div className="grid grid-cols-[100px_1fr] items-baseline gap-4 border-b border-[var(--border)] pb-3 last:border-b-0">
+      <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+        {props.label}
+      </dt>
+      <dd className="text-sm text-[var(--foreground)]">{props.value}</dd>
+    </div>
   );
 }

@@ -17,12 +17,16 @@ function validatePassword(value: string) {
   }
 }
 
-export function PasswordSignUpForm() {
+export function PasswordSignUpForm(props: {
+  defaultEmail?: string;
+  defaultName?: string;
+  defaultWebsite?: string;
+} = {}) {
   const router = useRouter();
-  const [fullName, setFullName] = useState("");
+  const [fullName, setFullName] = useState(props.defaultName ?? "");
   const [companyName, setCompanyName] = useState("");
-  const [website, setWebsite] = useState("");
-  const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState(props.defaultWebsite ?? "");
+  const [email, setEmail] = useState(props.defaultEmail ?? "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -134,7 +138,7 @@ export function PasswordSignUpForm() {
 
       if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
         setMessage(
-          "An account already exists for this email. Sign in with your password, use the email-link option, or reset your password if you never set one.",
+          "An account already exists for this email. Sign in with your password, continue with Google, or reset your password.",
         );
         return;
       }
@@ -182,7 +186,7 @@ export function PasswordSignUpForm() {
       <label className="grid gap-2 text-sm font-medium text-stone-700">
         Full name
         <input
-          className="input-field h-14 rounded-2xl px-4 text-base"
+          className="input-field h-12 px-4 text-sm"
           autoComplete="name"
           onChange={(event) => setFullName(event.target.value)}
           placeholder="Your full name"
@@ -195,7 +199,7 @@ export function PasswordSignUpForm() {
       <label className="grid gap-2 text-sm font-medium text-stone-700">
         Company name
         <input
-          className="input-field h-14 rounded-2xl px-4 text-base"
+          className="input-field h-12 px-4 text-sm"
           autoComplete="organization"
           onChange={(event) => setCompanyName(event.target.value)}
           placeholder="Your company"
@@ -208,7 +212,7 @@ export function PasswordSignUpForm() {
       <label className="grid gap-2 text-sm font-medium text-stone-700">
         Website
         <input
-          className="input-field h-14 rounded-2xl px-4 text-base"
+          className="input-field h-12 px-4 text-sm"
           autoComplete="url"
           onChange={(event) => setWebsite(event.target.value)}
           placeholder="yourcompany.com"
@@ -221,7 +225,7 @@ export function PasswordSignUpForm() {
       <label className="grid gap-2 text-sm font-medium text-stone-700">
         Work email
         <input
-          className="input-field h-14 rounded-2xl px-4 text-base"
+          className="input-field h-12 px-4 text-sm"
           autoComplete="email"
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@company.com"
@@ -234,7 +238,7 @@ export function PasswordSignUpForm() {
       <label className="grid gap-2 text-sm font-medium text-stone-700">
         Password
         <input
-          className="input-field h-14 rounded-2xl px-4 text-base"
+          className="input-field h-12 px-4 text-sm"
           autoComplete="new-password"
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Create a password"
@@ -247,7 +251,7 @@ export function PasswordSignUpForm() {
       <label className="grid gap-2 text-sm font-medium text-stone-700">
         Confirm password
         <input
-          className="input-field h-14 rounded-2xl px-4 text-base"
+          className="input-field h-12 px-4 text-sm"
           autoComplete="new-password"
           onChange={(event) => setConfirmPassword(event.target.value)}
           placeholder="Confirm your password"
@@ -263,13 +267,13 @@ export function PasswordSignUpForm() {
       </p>
 
       <button
-        className="btn-primary inline-flex h-14 items-center justify-center gap-2 rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
+        className="btn-accent inline-flex h-12 items-center justify-center gap-2 rounded-[var(--radius-md)] px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
         disabled={isSubmitting || cooldownSeconds > 0}
         type="submit"
       >
-        {isSubmitting && <LoadingSpinner size="sm" className="text-white/70" />}
+        {isSubmitting && <LoadingSpinner size="sm" className="text-white/80" />}
         {isSubmitting
-          ? "Creating account..."
+          ? "Creating account…"
           : cooldownSeconds > 0
             ? `Try again in ${cooldownSeconds}s`
             : "Create account"}

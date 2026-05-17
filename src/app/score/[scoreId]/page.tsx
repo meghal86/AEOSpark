@@ -33,216 +33,207 @@ export default async function ScorePage({
     }));
   const nextMoveCopy =
     score.overallScore <= 35
-      ? `Your score of ${score.overallScore} puts you in the bottom tier of sites we’ve analyzed. ChatGPT is likely recommending better-structured competitors in your category. The full audit shows which queries you’re losing and who is winning them.`
-      : `Your score of ${score.overallScore} means AI assistants can partially parse the site, but you still have clear gaps competitors can beat you on. The full audit shows which queries matter most and where to fix them first.`;
+      ? `A score of ${score.overallScore} is in the bottom tier of sites we've analyzed. AI assistants are likely recommending better-structured competitors in your category. The full audit shows which queries you're losing, and who's winning them.`
+      : `A score of ${score.overallScore} means AI assistants can partially parse your site, but you still have clear gaps competitors beat you on. The full audit shows which queries matter most and where to fix them first.`;
   const auditPreview = [
     {
       title: "Prompt-level visibility",
       detail:
-        "See the exact buyer-intent prompts where AI assistants mention competitors instead of you.",
+        "The exact buyer-intent prompts where AI assistants mention competitors instead of you.",
     },
     {
       title: "Competitor evidence",
       detail:
-        "Get named competitor examples, citation-share gaps, and where their pages beat yours structurally.",
+        "Named competitor examples, citation-share gaps, and where their pages beat yours structurally.",
     },
     {
       title: "Executive roadmap",
       detail:
-        "Receive a ranked 30/60/90-day implementation plan instead of a generic list of suggestions.",
+        "A ranked 30/60/90-day implementation plan instead of a generic list of suggestions.",
     },
   ];
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-10 px-6 py-10 md:px-10">
+    <main className="mx-auto w-full max-w-6xl px-6 py-6 md:px-10 md:py-10">
       <SiteHeader />
-      <section className="surface-panel app-fade-up grid gap-6 rounded-[2.4rem] p-6 lg:grid-cols-[1.25fr_0.75fr]">
-        <div className="grid gap-5">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm text-stone-600">
-              Created {formatDate(score.createdAt)}
-            </span>
-          </div>
 
-          <div>
-            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-stone-950 md:text-5xl">
-              {score.companyName} AEO score
-            </h1>
-            <p className="mt-3 max-w-2xl text-base leading-7 text-stone-700">
-              {score.executiveSummary}
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <article className="surface-card rounded-3xl p-5">
-              <p className={`text-sm font-semibold uppercase ${tone.className}`}>
-                {tone.label}
-              </p>
-              <div className="mt-3 flex items-end justify-between gap-3">
-                <p className="text-6xl font-semibold text-stone-950">{score.overallScore}</p>
-                <span className={`rounded-full px-3 py-1 text-sm font-bold ${tone.className} bg-white/60`}>
-                  {grade}
-                </span>
-              </div>
-              <p className="mt-3 text-sm text-stone-700">{score.verdict}</p>
-            </article>
-
-            <article className="surface-card rounded-3xl p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-                Crawl status
-              </p>
-              <p className="mt-3 text-xl font-semibold text-stone-950">
-                {score.crawlStatus === "live" ? "Live" : "Estimated"}
-              </p>
-              <p className="mt-3 text-sm text-stone-700">{score.crawlNotes[0]}</p>
-            </article>
-
-            <article className="surface-card rounded-3xl p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-                Next step
-              </p>
-              <p className="mt-3 text-xl font-semibold text-stone-950">
-                What this score means
-              </p>
-              <p className="mt-3 text-sm leading-6 text-stone-700">{nextMoveCopy}</p>
-            </article>
-          </div>
+      {/* ──────────────────────────────────────────────────────────────── */}
+      {/*  Headline                                                          */}
+      {/* ──────────────────────────────────────────────────────────────── */}
+      <section className="app-fade-up pt-16 pb-16 md:pt-24">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--foreground-subtle)]">
+          <span className="ui-kicker">Visibility score</span>
+          <span>·</span>
+          <span>Created {formatDate(score.createdAt)}</span>
         </div>
 
-        <div className="surface-card rounded-[2rem] p-5">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
-            Primary URL
-          </p>
-          <p className="mt-3 break-all text-sm leading-6 text-stone-700">{score.url}</p>
+        <h1 className="mt-6 text-5xl tracking-tight md:text-6xl">
+          {score.companyName}
+        </h1>
+        <p className="mt-4 max-w-2xl text-base leading-relaxed">
+          {score.executiveSummary}
+        </p>
 
-          {score.comparison ? (
-            <div className="mt-6 rounded-3xl border border-[rgba(72,52,40,0.1)] bg-[rgba(255,252,247,0.72)] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-                Competitor comparison
+        {/* Big score + essentials */}
+        <div className="mt-12 grid gap-12 border-t border-[var(--border)] pt-12 md:grid-cols-[0.7fr_1.3fr]">
+          <div className="grid gap-3">
+            <div className="flex items-baseline gap-4">
+              <span className="font-display text-[8rem] leading-none tracking-tighter text-[var(--foreground)]">
+                {score.overallScore}
+              </span>
+              <span
+                className={`font-display text-3xl tracking-tight ${tone.className}`}
+              >
+                {grade}
+              </span>
+            </div>
+            <p className={`text-sm font-semibold uppercase tracking-[0.14em] ${tone.className}`}>
+              {tone.label}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed">{score.verdict}</p>
+          </div>
+
+          <div className="grid gap-6 self-start">
+            <div className="grid gap-1 border-b border-[var(--border)] pb-5">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+                Primary URL
+              </span>
+              <p className="break-all text-base text-[var(--foreground)]">{score.url}</p>
+            </div>
+
+            <div className="grid gap-1 border-b border-[var(--border)] pb-5">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+                Crawl status
+              </span>
+              <p className="text-base text-[var(--foreground)]">
+                {score.crawlStatus === "live" ? "Live crawl" : "Estimated"}
               </p>
-              <div className="mt-3 flex items-end justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-stone-950">
-                    {score.comparison.companyName}
-                  </p>
-                  <p className="break-all text-sm text-stone-600">{score.comparison.url}</p>
-                </div>
-                <p className="text-4xl font-semibold text-stone-950">
-                  {score.comparison.overallScore}
-                </p>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-stone-700">
-                Citation gap vs primary:{" "}
-                <span className="font-semibold text-stone-950">
-                  {score.comparison.gapVsPrimary > 0 ? "+" : ""}
-                  {score.comparison.gapVsPrimary}
-                </span>
+              <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+                {score.crawlNotes[0]}
               </p>
             </div>
-          ) : null}
 
-          <div className="mt-6 grid gap-3">
-            <Link
-              className="btn-primary inline-flex h-12 items-center justify-center rounded-2xl text-sm font-bold transition"
+            <div className="grid gap-1">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+                What this score means
+              </span>
+              <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+                {nextMoveCopy}
+              </p>
+            </div>
+
+            {score.comparison ? (
+              <div className="mt-2 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-muted)] p-5">
+                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+                  Competitor comparison
+                </span>
+                <div className="mt-3 flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-[var(--foreground)]">
+                      {score.comparison.companyName}
+                    </p>
+                    <p className="break-all text-xs text-[var(--foreground-muted)]">
+                      {score.comparison.url}
+                    </p>
+                  </div>
+                  <p className="font-display text-4xl tracking-tight">
+                    {score.comparison.overallScore}
+                  </p>
+                </div>
+                <p className="mt-3 text-sm text-[var(--foreground-muted)]">
+                  Gap vs primary:{" "}
+                  <span className="font-semibold text-[var(--foreground)]">
+                    {score.comparison.gapVsPrimary > 0 ? "+" : ""}
+                    {score.comparison.gapVsPrimary}
+                  </span>
+                </p>
+              </div>
+            ) : null}
+
+            <div className="mt-2 flex flex-wrap gap-3">
+              <Link
+                className="btn-accent inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] px-5 text-sm font-semibold transition"
               href={`/checkout/audit?scoreId=${score.id}&website=${encodeURIComponent(
                 score.url,
               )}&company=${encodeURIComponent(score.companyName)}`}
             >
-              Get my full audit
-            </Link>
-            <Link
-              className="btn-secondary inline-flex h-12 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
-              href="/"
-            >
-              Run another score
-            </Link>
-            <a
-              className="btn-secondary inline-flex h-12 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
-              href={`/api/scores/${score.id}/summary.pdf`}
-            >
-              Download summary PDF
-            </a>
+                Audit + 90 days of monthly re-measurement
+              </Link>
+              <Link
+                className="btn-secondary inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] px-5 text-sm font-semibold transition"
+                href="/"
+              >
+                Run another score
+              </Link>
+              <a
+                className="btn-ghost inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] px-3 text-sm font-medium transition"
+                href={`/api/scores/${score.id}/summary.pdf`}
+              >
+                Download PDF →
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="surface-panel grid gap-5 rounded-[2rem] p-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <div className="grid gap-3">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
-            What changes in the paid audit
+      <hr className="section-divider" />
+
+      {/* ──────────────────────────────────────────────────────────────── */}
+      {/*  Score breakdown — seven signals                                   */}
+      {/* ──────────────────────────────────────────────────────────────── */}
+      <section className="py-20 md:py-24">
+        <div className="section-header">
+          <span className="ui-kicker">Score breakdown</span>
+          <h2 className="text-4xl md:text-5xl">Seven signals, one number.</h2>
+          <p className="mt-2 text-base leading-relaxed">
+            Each signal is weighted by how much it influences whether AI assistants
+            can parse, trust, and cite your content. Focus on the weakest first.
           </p>
-          <h2 className="text-2xl font-semibold text-stone-950">
-            This is where the score stops and the buying decision starts.
-          </h2>
-          <p className="max-w-2xl text-sm leading-7 text-stone-700">
-            The free score tells you that visibility is weak. The audit shows
-            which prompts matter, which competitors show up instead, what your
-            pages are missing, and the order to fix everything.
-          </p>
-          <div className="rounded-[1.7rem] border border-[rgba(72,52,40,0.12)] bg-[rgba(255,252,247,0.72)] px-5 py-4 text-sm leading-7 text-stone-700">
-            Teams do not pay for another dashboard. They pay for a clear answer
-            to three questions: where are we losing, to whom, and what moves the
-            needle first.
-          </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          {auditPreview.map((item) => (
-            <article className="surface-card rounded-[1.8rem] p-5" key={item.title}>
-              <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em]">
-                {item.title}
-              </p>
-              <p className="mt-4 text-sm leading-7 text-stone-700">{item.detail}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="surface-panel grid gap-4 rounded-[2rem] p-6">
-        <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
-              Score breakdown
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold text-stone-950">
-              Seven signals, one uncomfortable number
-            </h2>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-12 grid gap-x-10 gap-y-10 md:grid-cols-2">
           {score.dimensions.map((dimension) => {
             const value = Math.round((dimension.score / dimension.weight) * 100);
             const dimensionTone = scoreTone(value);
-            const dimensionGrade = scoreGrade(value);
 
             return (
               <article
-                className="surface-card rounded-3xl p-5 transition duration-200 hover:-translate-y-1"
+                className="grid gap-3 border-t border-[var(--border)] pt-6"
                 key={dimension.key}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-                      {dimension.label}
-                    </p>
-                    <h3 className="mt-2 text-xl font-semibold text-stone-950">
-                      {dimension.score}/{dimension.weight}
-                    </h3>
-                  </div>
-                  <span className={`rounded-full px-3 py-1 text-sm font-bold ${dimensionTone.className} bg-white/60`}>
-                    {dimensionGrade}
+                <div className="flex items-baseline justify-between gap-4">
+                  <h3 className="text-xl font-medium tracking-tight text-[var(--foreground)]">
+                    {dimension.label}
+                  </h3>
+                  <span className="font-display text-3xl tracking-tight">
+                    {dimension.score}
+                    <span className="text-base text-[var(--foreground-subtle)]">
+                      /{dimension.weight}
+                    </span>
                   </span>
                 </div>
 
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-stone-200">
+                <div className="h-[3px] overflow-hidden rounded-full bg-[var(--divider)]">
                   <div
-                    className={`h-full rounded-full bg-gradient-to-r ${dimensionTone.barClassName}`}
-                    style={{ width: percent(value) }}
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: percent(value),
+                      background:
+                        value >= 70
+                          ? "var(--accent)"
+                          : value >= 40
+                            ? "var(--warning)"
+                            : "var(--danger)",
+                    }}
                   />
                 </div>
 
-                <p className="mt-4 text-sm leading-6 text-stone-700">
+                <p className="mt-1 text-sm leading-relaxed">
+                  <span
+                    className={`mr-2 text-xs font-semibold uppercase tracking-[0.12em] ${dimensionTone.className}`}
+                  >
+                    {dimensionTone.label}
+                  </span>
                   {dimension.diagnosis}
                 </p>
               </article>
@@ -251,26 +242,75 @@ export default async function ScorePage({
         </div>
       </section>
 
-      <EmailCaptureGate
-        recommendations={score.recommendations}
-        score={score.overallScore}
-        scoreId={score.id}
-        website={score.url}
-      />
+      <hr className="section-divider" />
 
-      <ShareScoreCard
-        companyName={score.companyName}
-        overallScore={score.overallScore}
-        url={score.url}
-        weakestDimensions={weakestDimensions}
-      />
+      {/* ──────────────────────────────────────────────────────────────── */}
+      {/*  What comes in the paid audit                                      */}
+      {/* ──────────────────────────────────────────────────────────────── */}
+      <section className="py-20 md:py-24">
+        <div className="grid gap-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          <div className="section-header">
+            <span className="ui-kicker">Beyond the score</span>
+            <h2 className="text-4xl md:text-5xl">
+              Where the buying decision starts.
+            </h2>
+            <p className="mt-2 text-base leading-relaxed">
+              The score tells you visibility is weak. The audit tells you which
+              prompts matter, which competitors show up instead, what your pages
+              are missing, and the order to fix everything.
+            </p>
+          </div>
 
-      <section className="flex flex-wrap gap-3">
+          <div className="grid gap-8">
+            {auditPreview.map((item, index) => (
+              <article
+                className="grid grid-cols-[auto_1fr] gap-5 border-t border-[var(--border)] pt-6"
+                key={item.title}
+              >
+                <span className="font-display text-2xl tracking-tight text-[var(--accent)]">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div className="grid gap-2">
+                  <h3 className="text-xl font-medium text-[var(--foreground)]">
+                    {item.title}
+                  </h3>
+                  <p className="text-base leading-relaxed">{item.detail}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <hr className="section-divider" />
+
+      {/* ──────────────────────────────────────────────────────────────── */}
+      {/*  Email capture + share                                             */}
+      {/* ──────────────────────────────────────────────────────────────── */}
+      <section className="py-20">
+        <EmailCaptureGate
+          recommendations={score.recommendations}
+          score={score.overallScore}
+          scoreId={score.id}
+          website={score.url}
+        />
+      </section>
+
+      <section className="py-16">
+        <ShareScoreCard
+          companyName={score.companyName}
+          overallScore={score.overallScore}
+          url={score.url}
+          weakestDimensions={weakestDimensions}
+        />
+      </section>
+
+      <section className="flex flex-wrap gap-3 pt-8 pb-20">
         <Link
-          className="btn-secondary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
+          className="btn-ghost inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] px-4 text-sm font-medium transition"
           href={`/score/public/${score.publicSlug}`}
         >
-          Open public score URL
+          Open public score URL →
         </Link>
       </section>
     </main>

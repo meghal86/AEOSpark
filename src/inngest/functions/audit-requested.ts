@@ -1091,6 +1091,35 @@ SECTION 4 - 60-DAY PROJECTION
         status: "delivered",
       });
 
+      const deliveredOrder = prisma.order?.findUnique
+        ? await prisma.order.findUnique({ where: { id: order.id } })
+        : null;
+      if (deliveredOrder?.userId) {
+        const existingBaseline = prisma.scoreHistory?.findFirst
+          ? await prisma.scoreHistory.findFirst({
+              where: { orderId: order.id, runNumber: 1 },
+            })
+          : null;
+
+        if (!existingBaseline && prisma.scoreHistory?.create) {
+          await prisma.scoreHistory.create({
+            data: {
+              userId: deliveredOrder.userId,
+              domain,
+              orderId: order.id,
+              runNumber: 1,
+              citationClaude: step2.claudeShare,
+              citationChatgpt: step2.chatgptShare,
+              comp1Domain: step2.topCompetitors[0]?.[0] ?? null,
+              comp1Share: step2.competitor1Share,
+              comp2Domain: step2.topCompetitors[1]?.[0] ?? null,
+              comp2Share: step2.competitor2Share,
+              queryResults: step2.queryResults as unknown as Prisma.InputJsonValue,
+            },
+          });
+        }
+      }
+
       return { reportUrl, pdfUrl };
     })();
 

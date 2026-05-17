@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 const HOUR_MS = 60 * 60 * 1000;
 const RATE_LIMIT = 10;
+const PROTECTED_ROUTES = ["/account"];
+const AUTH_ROUTES = ["/sign-in", "/sign-up"];
 
 function getClientIp(request: NextRequest) {
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -57,26 +60,67 @@ function hitInMemoryRateLimit(ip: string) {
 }
 
 export async function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname !== "/api/score") {
+  const pathname = request.nextUrl.pathname;
+
+  if (pathname === "/api/score") {
+    const ip = getClientIp(request);
+    const count = (await hitUpstashRateLimit(ip)) ?? hitInMemoryRateLimit(ip);
+
+    if (count > RATE_LIMIT) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many requests. Please wait before checking another URL.",
+        },
+        { status: 429 },
+      );
+    }
+
     return NextResponse.next();
   }
 
-  const ip = getClientIp(request);
-  const count = (await hitUpstashRateLimit(ip)) ?? hitInMemoryRateLimit(ip);
+  let response = NextResponse.next({
+    request: { headers: request.headers },
+  });
 
-  if (count > RATE_LIMIT) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Too many requests. Please wait before checking another URL.",
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({
+            request: { headers: request.headers },
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
+        },
       },
-      { status: 429 },
-    );
+    },
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (PROTECTED_ROUTES.some((route) => pathname.startsWith(route)) && !user) {
+    const signInUrl = new URL("/sign-in", request.url);
+    signInUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(signInUrl);
   }
 
-  return NextResponse.next();
+  if (AUTH_ROUTES.includes(pathname) && user) {
+    return NextResponse.redirect(new URL("/account", request.url));
+  }
+
+  return response;
 }
 
 export const config = {
-  matcher: ["/api/score"],
+  matcher: ["/api/score", "/account/:path*", "/sign-in", "/sign-up"],
 };

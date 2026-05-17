@@ -14,51 +14,56 @@ export function SiteHeader(props?: {
 }) {
   const minimal = props?.minimal ?? false;
   const navLinks = props?.navLinks ?? [
-    { href: "/#platform", label: "How it works" },
+    { href: "/#how", label: "How it works" },
     { href: "/checkout/audit", label: "Full Audit" },
   ];
   const ctaLabel = props?.ctaLabel;
   const ctaHref = props?.ctaHref ?? "/checkout/audit";
 
   return (
-    <header className="relative flex items-center justify-between gap-4">
+    <header className="relative flex items-center justify-between py-2">
       <Link
-        className="ui-chip inline-flex items-center gap-3 rounded-full px-4 py-2 text-sm font-semibold backdrop-blur transition hover:scale-[1.02]"
+        className="group inline-flex items-center gap-2.5 text-[0.95rem] font-semibold tracking-tight text-[var(--foreground)] transition"
         href="/"
       >
-        <span className="h-2.5 w-2.5 rounded-full bg-[var(--accent)]" />
+        <span className="h-2 w-2 rounded-full bg-[var(--accent)] transition group-hover:scale-110" />
         AEOSpark
       </Link>
 
       {!minimal && (
         <>
           {/* Desktop navigation */}
-          <div className="hidden items-center gap-5 md:flex">
+          <div className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) => (
               <Link
-                className="text-sm font-semibold text-stone-700 transition hover:text-stone-950"
+                className="text-sm font-medium text-[var(--foreground-muted)] transition hover:text-[var(--foreground)]"
                 href={link.href}
                 key={link.href}
               >
                 {link.label}
               </Link>
             ))}
+            <div className="h-4 w-px bg-[var(--border)]" />
+            <AuthHeaderActions
+              className="flex items-center gap-5"
+              linkClassName="text-sm font-medium text-[var(--foreground-muted)] transition hover:text-[var(--foreground)]"
+              buttonClassName="btn-ghost inline-flex h-9 items-center rounded-[var(--radius-sm)] px-3 text-sm font-medium transition"
+            />
             {ctaLabel && (
               <Link
-                className="btn-primary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold transition"
+                className="btn-primary inline-flex h-10 items-center justify-center rounded-[var(--radius-md)] px-4 text-sm font-semibold transition"
                 href={ctaHref}
               >
                 {ctaLabel}
               </Link>
             )}
-            <AuthHeaderActions className="flex items-center gap-3" />
           </div>
 
           {/* Mobile navigation */}
           <MobileNavWrapper>
             {navLinks.map((link) => (
               <Link
-                className="flex h-11 items-center rounded-xl px-4 text-sm font-semibold text-stone-700 transition hover:bg-stone-100/60 hover:text-stone-950"
+                className="flex h-11 items-center rounded-[var(--radius-sm)] px-3 text-sm font-medium text-[var(--foreground-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
                 href={link.href}
                 key={link.href}
               >
@@ -67,24 +72,28 @@ export function SiteHeader(props?: {
             ))}
             {ctaLabel && (
               <Link
-                className="flex h-11 items-center rounded-xl px-4 text-sm font-bold text-[var(--accent)] transition hover:bg-stone-100/60"
+                className="flex h-11 items-center rounded-[var(--radius-sm)] px-3 text-sm font-semibold text-[var(--accent)] transition hover:bg-[var(--accent-soft)]"
                 href={ctaHref}
               >
                 {ctaLabel}
               </Link>
             )}
-            <div className="my-1 h-px bg-[rgba(72,52,40,0.08)]" />
+            <div className="my-1 h-px bg-[var(--border)]" />
             <AuthHeaderActions
               className="grid gap-1"
-              linkClassName="flex h-11 items-center rounded-xl px-4 text-sm font-semibold text-stone-700 transition hover:bg-stone-100/60 hover:text-stone-950"
-              buttonClassName="flex h-11 items-center rounded-xl px-4 text-sm font-semibold text-stone-700 transition hover:bg-stone-100/60 hover:text-stone-950 text-left"
+              linkClassName="flex h-11 items-center rounded-[var(--radius-sm)] px-3 text-sm font-medium text-[var(--foreground-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
+              buttonClassName="flex h-11 items-center rounded-[var(--radius-sm)] px-3 text-sm font-medium text-[var(--foreground-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] text-left"
             />
           </MobileNavWrapper>
         </>
       )}
 
       {minimal && (
-        <AuthHeaderActions className="flex items-center gap-3" />
+        <AuthHeaderActions
+          className="flex items-center gap-4"
+          linkClassName="text-sm font-medium text-[var(--foreground-muted)] transition hover:text-[var(--foreground)]"
+          buttonClassName="btn-ghost inline-flex h-9 items-center rounded-[var(--radius-sm)] px-3 text-sm font-medium transition"
+        />
       )}
     </header>
   );

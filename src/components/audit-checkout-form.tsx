@@ -76,149 +76,136 @@ export function AuditCheckoutForm(props: {
   }
 
   return (
-    <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-      <div className="surface-panel relative grid gap-5 rounded-[2.2rem] p-6 lg:p-7">
-        <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(124,85,68,0.4)] to-transparent" />
-        <div>
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
-            Buyer details
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold text-stone-950">
-            Get your AI visibility audit
-          </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-stone-700">
-            This purchase unlocks the exact prompts, competitor examples, and
-            implementation priorities behind the score.
+    <div className="grid gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+      {/* Form */}
+      <div className="grid gap-8">
+        <div className="grid gap-3">
+          <span className="ui-kicker">Your details</span>
+          <h2 className="text-3xl tracking-tight md:text-4xl">Checkout</h2>
+          <p className="text-base leading-relaxed">
+            Three fields to personalize the audit. Payment is handled by Stripe
+            on the next step.
           </p>
         </div>
 
-        <div className="grid gap-3">
-          <label className="grid gap-2 text-sm font-semibold text-stone-800">
+        <div className="grid gap-5">
+          <label className="grid gap-2 text-sm font-medium text-[var(--foreground)]">
             Full name
-          <input
-            className="input-field h-14 rounded-[1.35rem] px-4 text-sm"
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Buyer name"
-            value={name}
-          />
+            <input
+              className="input-field h-12 px-4 text-sm"
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Your full name"
+              value={name}
+            />
           </label>
-          <label className="grid gap-2 text-sm font-semibold text-stone-800">
+          <label className="grid gap-2 text-sm font-medium text-[var(--foreground)]">
             Work email
-          <input
-            className="input-field h-14 rounded-[1.35rem] px-4 text-sm"
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Business email"
-            type="email"
-            value={email}
-          />
+            <input
+              className="input-field h-12 px-4 text-sm"
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@company.com"
+              type="email"
+              value={email}
+            />
           </label>
-          <label className="grid gap-2 text-sm font-semibold text-stone-800">
+          <label className="grid gap-2 text-sm font-medium text-[var(--foreground)]">
             Website to audit
-          <input
-            className="input-field h-14 rounded-[1.35rem] px-4 text-sm"
-            onChange={(event) => setWebsite(event.target.value)}
-            placeholder="Website"
-            value={website}
-          />
+            <input
+              className="input-field h-12 px-4 text-sm"
+              onChange={(event) => setWebsite(event.target.value)}
+              placeholder="yourcompany.com"
+              value={website}
+            />
           </label>
 
           <button
-            className="btn-primary mt-1 inline-flex h-14 items-center justify-center gap-2 rounded-[1.35rem] text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn-accent mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-[var(--radius-md)] text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSubmitting}
             onClick={() => submit()}
             type="button"
           >
-            {isSubmitting && <LoadingSpinner size="sm" className="text-white/70" />}
-            {isSubmitting ? "Redirecting to checkout..." : "Get My Full Audit — $997"}
+            {isSubmitting && <LoadingSpinner size="sm" className="text-white/80" />}
+            {isSubmitting ? "Redirecting to Stripe…" : "Continue to payment — $997"}
           </button>
 
           {error ? <p className="status-danger text-sm">{error}</p> : null}
+
+          <p className="text-xs leading-relaxed text-[var(--foreground-subtle)]">
+            Secure checkout powered by Stripe. Card, Apple Pay, and Google Pay
+            are available on the next step. AEOSpark only stores the details
+            needed to run your audit.
+          </p>
+        </div>
+      </div>
+
+      {/* Summary */}
+      <aside className="grid gap-10 lg:sticky lg:top-10">
+        <div className="grid gap-5">
+          <span className="ui-kicker">Order summary</span>
+          <dl className="grid gap-3 text-sm">
+            <div className="flex items-baseline justify-between gap-4 border-b border-[var(--border)] pb-3">
+              <dt className="text-[var(--foreground-muted)]">Full AEO Audit</dt>
+              <dd className="font-medium text-[var(--foreground)]">$997</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4 border-b border-[var(--border)] pb-3">
+              <dt className="text-[var(--foreground-muted)]">Delivery</dt>
+              <dd className="text-[var(--foreground-muted)]">Within 24 hours</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4 border-b border-[var(--border)] pb-3">
+              <dt className="text-[var(--foreground-muted)]">Tax</dt>
+              <dd className="text-[var(--foreground-muted)]">$0</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4 pt-1">
+              <dt className="font-medium text-[var(--foreground)]">Total</dt>
+              <dd className="font-display text-2xl tracking-tight text-[var(--foreground)]">
+                $997
+              </dd>
+            </div>
+          </dl>
         </div>
 
-        <div className="surface-card grid gap-3 rounded-[1.8rem] p-5">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em]">
-            Payment area
-          </p>
-          <div className="rounded-[1.4rem] border border-[rgba(72,52,40,0.12)] bg-[rgba(255,252,247,0.72)] px-4 py-6 text-sm leading-6 text-stone-700">
-            Card entry, Apple Pay, and Google Pay are handled by Stripe-hosted
-            Checkout after you submit this form.
-          </div>
-          <div className="ui-chip rounded-[1.2rem] px-4 py-3 text-sm font-semibold">
-            SSL secured checkout
-          </div>
-        </div>
-
-        <div className="surface-card grid gap-3 rounded-[1.8rem] p-5">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em]">
-            What leadership gets answered
-          </p>
-          <div className="grid gap-2 text-sm leading-7 text-stone-700">
-            {buyerQuestions.map((question) => (
-              <p key={question}>• {question}</p>
+        <div className="grid gap-4">
+          <span className="ui-kicker">What&rsquo;s included</span>
+          <ul className="grid gap-3 text-sm leading-relaxed text-[var(--foreground-muted)]">
+            {[
+              "Executive PDF audit with buyer-intent query findings",
+              "Citation baseline across major AI assistants",
+              "Named competitor comparison with proof excerpts",
+              "Highest-impact fixes ranked by expected impact",
+              "30/60/90-day implementation roadmap",
+              "90-day measurement window with three monthly re-runs",
+            ].map((item) => (
+              <li key={item} className="flex gap-3">
+                <svg
+                  className="mt-[3px] h-4 w-4 flex-shrink-0 text-[var(--accent)]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                {item}
+              </li>
             ))}
-          </div>
-        </div>
-
-        <p className="max-w-xl text-xs leading-6 text-stone-600">
-          Stripe handles payment security. AEOSpark only collects the audit
-          details needed to create the checkout session.
-        </p>
-      </div>
-
-      <div className="grid gap-4">
-        <div className="surface-card rounded-[1.8rem] p-5">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em]">
-            Order summary
-          </p>
-          <div className="mt-4 grid gap-3 text-sm text-stone-700">
-            <div className="flex items-center justify-between gap-3">
-              <span>Full AEO Audit</span>
-              <span className="font-semibold text-stone-950">$997</span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span>Final report</span>
-              <span>Within 24hrs</span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span>Tax</span>
-              <span>$0</span>
-            </div>
-            <div className="border-t border-[rgba(72,52,40,0.1)] pt-3 flex items-center justify-between gap-3">
-              <span className="font-semibold text-stone-950">Total</span>
-              <span className="text-lg font-bold text-stone-950">$997</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="surface-card rounded-[1.8rem] p-5">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em]">
-            What&apos;s included
-          </p>
-          <ul className="mt-4 grid gap-3 text-sm leading-6 text-stone-700">
-            <li>✓ Executive PDF audit with buyer-intent query findings</li>
-            <li>✓ Citation baseline across major AI assistants</li>
-            <li>✓ Named competitor comparison with proof excerpts</li>
-            <li>✓ Highest-impact fixes ranked by expected impact</li>
-            <li>✓ 30/60/90-day implementation roadmap</li>
-            <li>✓ 30-minute strategy call after delivery</li>
           </ul>
-          <p className="mt-4 text-xs leading-6 text-stone-600">
-            This is not the score page repackaged. The deliverable is a separate
-            report with prompt-by-prompt findings, competitor examples, and a
-            ranked implementation plan.
-          </p>
         </div>
 
-        <div className="surface-card rounded-[1.8rem] p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-            Audit guarantee
-          </p>
-          <div className="mt-4 rounded-[1.4rem] border border-emerald-200/80 bg-[rgba(232,247,240,0.92)] px-4 py-4 text-sm leading-7 text-emerald-900">
-            If this audit does not show you at least three specific, actionable
-            changes to improve AI visibility, we will refund you in full.
-          </div>
+        <div className="grid gap-3">
+          <span className="ui-kicker">Leadership answers</span>
+          <ul className="grid gap-2 text-sm leading-relaxed text-[var(--foreground-muted)]">
+            {buyerQuestions.map((q) => (
+              <li key={q}>— {q}</li>
+            ))}
+          </ul>
         </div>
-      </div>
-    </section>
+
+        <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--accent-soft)] p-5 text-sm leading-relaxed text-[var(--accent-deep)]">
+          <strong className="font-semibold">Audit guarantee.</strong>{" "}
+          If the report doesn&rsquo;t show you at least three specific, actionable
+          changes to improve AI visibility, we refund in full.
+        </div>
+      </aside>
+    </div>
   );
 }

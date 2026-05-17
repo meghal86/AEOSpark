@@ -57,9 +57,7 @@ export function EmailCaptureGate(props: {
 
       window.localStorage.setItem(unlockKey(props.website), "true");
       setIsUnlocked(true);
-      setStatus(
-        "Unlocked. Check your inbox for the summary.",
-      );
+      setStatus("Unlocked. Check your inbox for the summary.");
     } catch (caughtError) {
       setStatus(
         caughtError instanceof Error
@@ -72,58 +70,57 @@ export function EmailCaptureGate(props: {
   }
 
   return (
-    <section className="surface-panel grid gap-5 rounded-[2rem] p-6 app-fade-up">
-      <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
-            Your fix roadmap
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-stone-950">
-            Full 10-fix roadmap
+    <section className="app-fade-up">
+      <div className="grid gap-6 md:grid-cols-[auto_1fr] md:items-end md:gap-16">
+        <div className="md:max-w-xs">
+          <span className="ui-kicker">Fix roadmap</span>
+          <h2 className="mt-3 text-3xl tracking-tight md:text-4xl">
+            Your 10 leverage points.
           </h2>
+          <p className="mt-4 text-sm leading-relaxed">
+            First 3 fixes are free. The rest unlock with an email — delivered
+            to your inbox as a summary.
+          </p>
         </div>
-        <p className="max-w-xl text-sm text-stone-700">First 3 fixes are free. The rest unlock after email.</p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="grid gap-3">
+      <div className="mt-12 grid gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:gap-16">
+        <div className="grid gap-0">
           {props.recommendations.map((recommendation, index) => {
             const locked = recommendation.locked && !isUnlocked;
+
             return (
               <article
-                className={`relative rounded-3xl border p-4 transition duration-200 ${
-                  locked
-                    ? "border-[rgba(72,52,40,0.08)] bg-[rgba(255,252,247,0.58)]"
-                    : "border-[rgba(72,52,40,0.1)] bg-[rgba(255,252,247,0.78)] hover:-translate-y-0.5"
-                }`}
                 key={recommendation.id}
+                className="relative grid grid-cols-[auto_1fr_auto] items-start gap-6 border-t border-[var(--border)] py-6 last:border-b"
               >
+                <span className="font-display text-2xl tracking-tight text-[var(--foreground-subtle)]">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+
                 <div
                   className={
-                    locked ? "pointer-events-none select-none blur-sm" : undefined
+                    locked ? "pointer-events-none select-none blur-[4px]" : undefined
                   }
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-                      Fix {index + 1}
-                    </span>
-                    <span className="ui-chip rounded-full px-3 py-1 text-xs">
-                      {recommendation.impact} impact / {recommendation.effort} effort
-                    </span>
-                  </div>
-                  <h3 className="mt-3 text-lg font-semibold text-stone-950">
+                  <p className="text-base font-medium text-[var(--foreground)]">
                     {locked ? "Unlock full roadmap" : recommendation.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-stone-700">
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground-muted)]">
                     {locked
-                      ? "This recommendation is intentionally hidden until the roadmap is unlocked."
+                      ? "Hidden until the roadmap is unlocked with your email."
                       : recommendation.detail}
                   </p>
                 </div>
+
+                <span className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--foreground-subtle)]">
+                  {recommendation.impact}/{recommendation.effort}
+                </span>
+
                 {locked ? (
-                  <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-[rgba(255,252,247,0.18)]">
-                    <span className="ui-chip rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em]">
-                      Locked until email unlock
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-end pr-2">
+                    <span className="inline-flex items-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1 text-xs font-semibold text-[var(--foreground-muted)]">
+                      Locked
                     </span>
                   </div>
                 ) : null}
@@ -132,48 +129,56 @@ export function EmailCaptureGate(props: {
           })}
         </div>
 
-        <div className="surface-card rounded-3xl p-5">
-          <h3 className="text-xl font-semibold text-stone-950">
-            Unlock full roadmap
-          </h3>
-          <p className="mt-3 text-sm leading-6 text-stone-700">Enter your details to see all 10 fixes.</p>
+        <aside className="grid gap-6 self-start lg:sticky lg:top-8">
+          <div>
+            <span className="ui-kicker">Unlock</span>
+            <h3 className="mt-3 text-2xl tracking-tight">Get all 10 fixes.</h3>
+            <p className="mt-3 text-sm leading-relaxed">
+              Enter your details and we&rsquo;ll email the summary. No spam —
+              one email, the roadmap, and that&rsquo;s it.
+            </p>
+          </div>
 
-          <form className="mt-5 grid gap-3" onSubmit={handleSubmit}>
-            <label className="grid gap-2 text-sm font-semibold text-stone-800">
+          <form className="grid gap-4" onSubmit={handleSubmit}>
+            <label className="grid gap-2 text-sm font-medium text-[var(--foreground)]">
               Name
-            <input
-              className="input-field h-12 rounded-2xl px-4 text-sm"
-              placeholder="Your name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-            />
+              <input
+                className="input-field h-12 px-4 text-sm"
+                placeholder="Your name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+              />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-stone-800">
+            <label className="grid gap-2 text-sm font-medium text-[var(--foreground)]">
               Business email
-            <input
-              className="input-field h-12 rounded-2xl px-4 text-sm"
-              placeholder="Business email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
+              <input
+                className="input-field h-12 px-4 text-sm"
+                placeholder="you@company.com"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
             </label>
 
             <button
-              className="btn-primary inline-flex h-12 items-center justify-center rounded-2xl text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={isSubmitting}
+              className="btn-accent inline-flex h-12 items-center justify-center rounded-[var(--radius-md)] text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isSubmitting || isUnlocked}
               type="submit"
             >
-              {isSubmitting ? "Unlocking..." : "Unlock full roadmap"}
+              {isUnlocked
+                ? "Unlocked ✓"
+                : isSubmitting
+                  ? "Unlocking…"
+                  : "Unlock full roadmap →"}
             </button>
           </form>
 
           {status ? (
-            <p className="mt-4 text-sm text-stone-800">{status}</p>
+            <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">{status}</p>
           ) : null}
-        </div>
+        </aside>
       </div>
     </section>
   );

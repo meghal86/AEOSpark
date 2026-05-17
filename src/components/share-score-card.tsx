@@ -45,86 +45,87 @@ export function ShareScoreCard(props: {
   }
 
   return (
-    <section className="surface-panel grid gap-4 rounded-[2rem] p-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <section>
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
-            Share your score
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-stone-950">
-            Shareable score card
+          <span className="ui-kicker">Share</span>
+          <h2 className="mt-3 text-3xl tracking-tight md:text-4xl">
+            Shareable score card.
           </h2>
         </div>
 
         <div className="flex flex-wrap gap-3">
           <button
-            className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
+            className="btn-secondary inline-flex h-10 items-center justify-center rounded-[var(--radius-sm)] px-4 text-sm font-medium transition"
             onClick={downloadCard}
             type="button"
           >
             Download PNG
           </button>
           <button
-            className="btn-primary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-bold transition"
+            className="btn-accent inline-flex h-10 items-center justify-center rounded-[var(--radius-sm)] px-4 text-sm font-semibold transition"
             onClick={shareOnLinkedIn}
             type="button"
           >
-            Share on LinkedIn
+            Share on LinkedIn →
           </button>
         </div>
       </div>
 
       <div
-        className="overflow-hidden rounded-[1.75rem] border border-[rgba(72,52,40,0.1)]"
+        className="mt-8 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)]"
         ref={ref}
       >
-        <div className="bg-[radial-gradient(circle_at_top_left,_rgba(181,139,118,0.24),_transparent_32%),linear-gradient(135deg,#faf6ef,#f1e8db_45%,#e7dac8)] p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-500">
-            AEOSpark Score Card
+        <div className="bg-[var(--surface-muted)] p-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
+            AEOSpark · Score card
           </p>
-          <div className="mt-6 flex items-end justify-between gap-6">
+          <div className="mt-8 flex items-end justify-between gap-6">
             <div>
-              <h3 className="max-w-xs text-3xl font-semibold text-stone-950">
+              <h3 className="max-w-xs font-display text-4xl tracking-tight text-[var(--foreground)]">
                 {props.companyName}
               </h3>
-              <p className="mt-2 text-sm text-stone-700">{props.url}</p>
+              <p className="mt-2 text-sm text-[var(--foreground-muted)]">
+                {props.url}
+              </p>
             </div>
             <div className="text-right">
-              <p className={`text-sm font-semibold uppercase ${tone.className}`}>
+              <p
+                className={`text-xs font-semibold uppercase tracking-[0.12em] ${tone.className}`}
+              >
                 {tone.label}
               </p>
-              <p className="text-6xl font-semibold text-stone-950">
+              <p className="font-display text-7xl tracking-tight text-[var(--foreground)]">
                 {props.overallScore}
               </p>
             </div>
           </div>
 
-          <div className="mt-8 grid gap-3 md:grid-cols-2">
+          <dl className="mt-10 grid gap-0">
             {props.weakestDimensions.map((dimension) => (
               <div
-                className="rounded-3xl border border-[rgba(72,52,40,0.1)] bg-[rgba(255,252,247,0.62)] p-4"
                 key={dimension.label}
+                className="flex items-center justify-between border-t border-[var(--border)] py-4"
               >
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-                  Weakest dimension
-                </p>
-                <div className="mt-3 flex items-center justify-between gap-4">
-                  <span className="text-sm text-stone-900">{dimension.label}</span>
-                  <span className="text-lg font-semibold text-stone-950">
-                    {dimension.score}
-                  </span>
-                </div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+                  Weakest · {dimension.label}
+                </dt>
+                <dd className="font-display text-2xl tracking-tight text-[var(--foreground)]">
+                  {dimension.score}
+                </dd>
               </div>
             ))}
-          </div>
+          </dl>
 
-          <div className="mt-8 rounded-3xl border border-[rgba(72,52,40,0.1)] bg-[rgba(255,252,247,0.62)] p-4 text-sm text-stone-700">
-            Check your AEO score at AEOSpark.com
+          <div className="mt-10 border-t border-[var(--border)] pt-5 text-xs font-medium uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+            aeospark.com
           </div>
         </div>
       </div>
 
-      {status ? <p className="text-sm text-stone-700">{status}</p> : null}
+      {status ? (
+        <p className="mt-4 text-sm text-[var(--foreground-muted)]">{status}</p>
+      ) : null}
     </section>
   );
 }

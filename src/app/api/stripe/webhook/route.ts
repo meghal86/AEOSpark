@@ -5,6 +5,7 @@ import { inngest } from "@/inngest/client";
 import { processAuditRequested } from "@/inngest/functions/audit-requested";
 import { appEnv } from "@/lib/env";
 import { sendAuditConfirmationEmail } from "@/lib/email-workflows";
+import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import {
   createOrder,
@@ -41,13 +42,28 @@ export async function POST(request: Request) {
       if (paymentIntentId) {
         const existing = await getOrderByStripePaymentIntent(paymentIntentId);
         if (!existing) {
+          const email = session.customer_details?.email || session.customer_email || "";
+          const profile = email
+            ? await prisma.userProfile.findUnique({ where: { email } })
+            : null;
+          const measurementWindowEndsAt = new Date();
+          measurementWindowEndsAt.setDate(measurementWindowEndsAt.getDate() + 90);
+
           const order = await createOrder({
-            email: session.customer_details?.email || session.customer_email || "",
+            email,
             name: session.metadata?.name,
             url: session.metadata?.url || "",
             stripePaymentIntentId: paymentIntentId,
             amountCents: 99_700,
             status: "pending",
+          });
+
+          await prisma.order.update({
+            where: { id: order.id },
+            data: {
+              userId: profile?.userId ?? null,
+              measurementWindowEndsAt,
+            },
           });
 
           if (appEnv.inngestEventKey) {

@@ -34,35 +34,29 @@ function prettyStep(step?: string) {
   }
 }
 
-function resultBadge(provider: {
+type ProviderResult = {
   cited: boolean;
   competitor_cited: string | null;
-} | null) {
+  excerpt?: string;
+} | null;
+
+function resultState(provider: ProviderResult): {
+  label: string;
+  tone: "accent" | "muted" | "danger";
+} {
   if (!provider) {
-    return {
-      label: "No response",
-      className: "bg-stone-200 text-stone-700",
-    };
+    return { label: "No response", tone: "muted" };
   }
 
   if (provider.cited) {
-    return {
-      label: "Cited ✓",
-      className: "bg-[#00C566] text-[#05351b]",
-    };
+    return { label: "Cited ✓", tone: "accent" };
   }
 
   if (provider.competitor_cited) {
-    return {
-      label: `× ${provider.competitor_cited}`,
-      className: "bg-[#FF4D1C] text-white",
-    };
+    return { label: provider.competitor_cited, tone: "danger" };
   }
 
-  return {
-    label: "Not mentioned",
-    className: "bg-stone-200 text-stone-700",
-  };
+  return { label: "Not mentioned", tone: "muted" };
 }
 
 function splitFixes(topFixes: string) {
@@ -84,18 +78,22 @@ export default async function ReportPage({
 
   if (!delivery) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10 md:px-10">
+      <main className="mx-auto w-full max-w-5xl px-6 py-6 md:px-10 md:py-10">
         <SiteHeader />
-        <section className="surface-panel rounded-[2.5rem] p-8">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
-            Report unavailable
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950">
+        <section className="app-fade-up pt-16 pb-24 md:pt-24">
+          <span className="ui-kicker">Report unavailable</span>
+          <h1 className="mt-4 text-5xl tracking-tight md:text-6xl">
             Report not found.
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-stone-700">
-            Email hello@aeospark.com with your order reference and we&apos;ll help you locate the
-            report.
+          <p className="mt-5 max-w-2xl text-base leading-relaxed">
+            Email{" "}
+            <a
+              className="font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
+              href="mailto:hello@aeospark.com"
+            >
+              hello@aeospark.com
+            </a>{" "}
+            with your order reference and we&rsquo;ll help you locate it.
           </p>
         </section>
       </main>
@@ -107,50 +105,35 @@ export default async function ReportPage({
 
   if (order.status === "pending" || order.status === "processing" || !report) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10 md:px-10">
+      <main className="mx-auto w-full max-w-5xl px-6 py-6 md:px-10 md:py-10">
         <SiteHeader />
         <ReportAutoRefresh />
 
-        <section className="surface-panel rounded-[2.5rem] p-8">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
-            Report in progress
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950">
+        <section className="app-fade-up pt-16 pb-24 md:pt-24">
+          <span className="ui-kicker">Report in progress</span>
+          <h1 className="mt-4 text-5xl tracking-tight md:text-6xl">
             Your report is being prepared.
           </h1>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-stone-700">
-            We&apos;re still running the audit pipeline for {new URL(order.website).hostname.replace(/^www\./, "")}.
-            This page refreshes automatically every 10 seconds.
+          <p className="mt-5 max-w-2xl text-base leading-relaxed">
+            We&rsquo;re still running the audit pipeline for{" "}
+            <span className="font-medium text-[var(--foreground)]">
+              {new URL(order.website).hostname.replace(/^www\./, "")}
+            </span>
+            . This page refreshes automatically every 10 seconds.
           </p>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            <article className="surface-card rounded-[1.8rem] p-5">
-              <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.18em]">
-                Status
-              </p>
-              <p className="mt-3 text-lg font-semibold text-stone-950 capitalize">
-                {order.status}
-              </p>
-            </article>
-            <article className="surface-card rounded-[1.8rem] p-5">
-              <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.18em]">
-                Current step
-              </p>
-              <p className="mt-3 text-lg font-semibold text-stone-950">
-                {prettyStep(report?.auditStep)}
-              </p>
-            </article>
-            <article className="surface-card rounded-[1.8rem] p-5">
-              <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.18em]">
-                Estimated delivery
-              </p>
-              <p className="mt-3 text-lg font-semibold text-stone-950">Within 24 hours</p>
-            </article>
-          </div>
+          <dl className="mt-12 grid grid-cols-1 gap-10 md:grid-cols-3">
+            <StatusCell label="Status" value={order.status.charAt(0).toUpperCase() + order.status.slice(1)} />
+            <StatusCell label="Current step" value={prettyStep(report?.auditStep)} />
+            <StatusCell label="Delivery" value="Within 24 hrs" />
+          </dl>
 
-          <div className="mt-6 rounded-[1.8rem] border border-stone-200 bg-stone-50/80 px-5 py-4 text-sm leading-7 text-stone-600">
-            Reference: <span className="font-semibold text-stone-950">{compactReference(reference)}</span>
-          </div>
+          <p className="mt-12 text-sm text-[var(--foreground-muted)]">
+            Reference:{" "}
+            <span className="font-medium text-[var(--foreground)]">
+              {compactReference(reference)}
+            </span>
+          </p>
         </section>
       </main>
     );
@@ -158,9 +141,11 @@ export default async function ReportPage({
 
   const fixes = splitFixes(report.topFixes);
   const domain = report.domain;
+  const claudePct = Math.round(report.claudeCitationShare);
+  const chatgptPct = Math.round(report.chatgptCitationShare);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-10">
+    <main className="mx-auto w-full max-w-6xl px-6 py-6 md:px-10 md:py-10">
       <BuyerSessionSync
         domain={domain}
         email={order.email}
@@ -171,246 +156,380 @@ export default async function ReportPage({
       />
       <SiteHeader />
 
-      <section className="surface-panel grid gap-6 rounded-[2.5rem] p-6 lg:grid-cols-[240px_1fr] lg:p-8">
-        <aside className="grid gap-4 self-start lg:sticky lg:top-8">
-          <div className="surface-card rounded-[2rem] p-5">
-            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
-              Citation share
-            </p>
-            <div className="mt-4 grid gap-4">
-              <div>
-                <p className="text-sm text-stone-600">Claude</p>
-                <p className="text-3xl font-semibold text-stone-950">
-                  {Math.round(report.claudeCitationShare)}%
-                </p>
-                <p className="text-sm text-stone-600">{report.claudeCited}/20 queries</p>
-              </div>
-              <div>
-                <p className="text-sm text-stone-600">ChatGPT</p>
-                <p className="text-3xl font-semibold text-stone-950">
-                  {Math.round(report.chatgptCitationShare)}%
-                </p>
-                <p className="text-sm text-stone-600">{report.chatgptCited}/20 queries</p>
-              </div>
-            </div>
-          </div>
+      {/* -------------------------------------------------------------- */}
+      {/*  Masthead                                                       */}
+      {/* -------------------------------------------------------------- */}
+      <section className="app-fade-up pt-16 pb-16 md:pt-24">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="ui-kicker">AI visibility audit</span>
+          <span className="text-xs text-[var(--foreground-subtle)]">
+            · {formatDate(report.generatedAt)}
+          </span>
+        </div>
+        <h1 className="mt-4 text-5xl tracking-tight md:text-6xl">
+          {domain}
+        </h1>
+        <p className="mt-5 max-w-2xl text-base leading-relaxed">
+          A prompt-level view of how Claude and ChatGPT cite you versus the two
+          competitors your buyers compare you against.
+        </p>
 
-          <div className="surface-card rounded-[2rem] p-5">
-            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
-              Jump to
-            </p>
-            <div className="mt-4 grid gap-3 text-sm font-semibold text-stone-700">
-              <a href="#summary">Executive Summary</a>
-              <a href="#queries">Query Results</a>
-              <a href="#gaps">Gap Analysis</a>
-              <a href="#roadmap">Fix Roadmap</a>
-              <a href="#implementation">Implementation Pack</a>
-            </div>
-          </div>
-
-          <div className="grid gap-3">
+        <div className="mt-10 flex flex-wrap gap-3">
+          <Link
+            className="btn-secondary inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] px-5 text-sm font-semibold transition"
+            href={`/api/reports/${reference}/download`}
+            target="_blank"
+          >
+            Download PDF →
+          </Link>
+          {appEnv.calendlyUrl ? (
             <Link
-              className="btn-secondary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
-              href={`/api/reports/${reference}/download`}
-              target="_blank"
-            >
-              Download PDF
-            </Link>
-            <Link
-              className="btn-primary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
+              className="btn-accent inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] px-5 text-sm font-semibold transition"
               href={appEnv.calendlyUrl}
               target="_blank"
             >
-              Book Strategy Call
+              Book strategy call →
             </Link>
-          </div>
-        </aside>
+          ) : null}
+        </div>
+      </section>
 
-        <div className="grid gap-6">
-          <section className="surface-card rounded-[2rem] p-6" id="summary">
-            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
-              Citation Share Summary
-            </p>
-            <div className="mt-4 overflow-hidden rounded-[1.5rem] border border-stone-200">
-              <div className="grid grid-cols-[1.6fr_1fr_1fr] border-b border-stone-200 bg-stone-50/90 text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
-                <div className="px-4 py-3">Brand</div>
-                <div className="px-4 py-3">Claude</div>
-                <div className="px-4 py-3">ChatGPT</div>
-              </div>
-              {[
-                {
-                  label: domain,
-                  claude: `${Math.round(report.claudeCitationShare)}% (${report.claudeCited}/20)`,
-                  chatgpt: `${Math.round(report.chatgptCitationShare)}% (${report.chatgptCited}/20)`,
-                },
-                {
-                  label: report.competitor1 || "Top competitor",
-                  claude: `${Math.round(report.competitor1ClaudeShare ?? report.competitor1Share)}%`,
-                  chatgpt: `${Math.round(report.competitor1ChatgptShare ?? report.competitor1Share)}%`,
-                },
-                {
-                  label: report.competitor2 || "Second competitor",
-                  claude: `${Math.round(report.competitor2ClaudeShare ?? report.competitor2Share)}%`,
-                  chatgpt: `${Math.round(report.competitor2ChatgptShare ?? report.competitor2Share)}%`,
-                },
-              ].map((row, index) => (
-                <div
-                  className={`grid grid-cols-[1.6fr_1fr_1fr] border-b border-stone-200 text-sm text-stone-700 ${index % 2 === 1 ? "bg-stone-50/60" : "bg-white/70"}`}
-                  key={row.label}
-                >
-                  <div className="px-4 py-4 font-semibold text-stone-950">{row.label}</div>
-                  <div className="px-4 py-4">{row.claude}</div>
-                  <div className="px-4 py-4">{row.chatgpt}</div>
-                </div>
-              ))}
-            </div>
-            {report.marginOfError != null && report.marginOfError > 0 && (
-              <div className="mt-4 rounded-[1.2rem] border border-stone-200 bg-stone-50/60 px-4 py-3 text-xs leading-6 text-stone-600">
-                Score confidence: these numbers carry an estimated margin of error of
-                {" "}±{report.marginOfError}% based on variance across {report.queryResults.length} queries.
-                AI responses are non-deterministic — re-running may produce slightly different results.
-              </div>
-            )}
-            <p className="mt-5 text-sm leading-7 text-stone-700">{report.executiveSummary}</p>
-          </section>
+      <hr className="section-divider" />
 
-          <section className="surface-card rounded-[2rem] p-6" id="queries">
-            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
-              Query Results
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-stone-950">
-              What AI says when your buyers ask
+      {/* -------------------------------------------------------------- */}
+      {/*  Citation share (headline metric)                              */}
+      {/* -------------------------------------------------------------- */}
+      <section className="py-16 md:py-20" id="summary">
+        <div className="grid gap-12 md:grid-cols-[auto_1fr] md:gap-16">
+          <div className="md:max-w-xs">
+            <span className="ui-kicker">01 · Citation share</span>
+            <h2 className="mt-3 text-3xl tracking-tight md:text-4xl">
+              Where AI points your buyers.
             </h2>
-            <p className="mt-2 text-sm leading-7 text-stone-700">
-              20 real buyer-intent queries · results as of {formatDate(report.generatedAt)}
+            <p className="mt-4 text-sm leading-relaxed">
+              Share of 20 buyer-intent prompts where each brand was cited as a
+              recommended answer.
             </p>
+            {report.marginOfError != null && report.marginOfError > 0 ? (
+              <p className="mt-4 text-xs leading-relaxed text-[var(--foreground-subtle)]">
+                Margin of error: ±{report.marginOfError}%. AI responses are
+                non-deterministic; re-running may vary.
+              </p>
+            ) : null}
+          </div>
 
-            <div className="mt-6 overflow-hidden rounded-[1.8rem] border border-stone-200">
-              <div className="grid grid-cols-[1.35fr_1fr_1fr] border-b border-stone-200 bg-stone-50/90 text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
-                <div className="px-4 py-3">Query</div>
-                <div className="px-4 py-3">Claude</div>
-                <div className="px-4 py-3">ChatGPT</div>
-              </div>
-              {report.queryResults.map((row, index) => {
-                const claude = resultBadge(row.claude);
-                const chatgpt = resultBadge(row.chatgpt);
+          <div>
+            <ShareRow
+              brand={domain}
+              you
+              claude={{ pct: claudePct, label: `${report.claudeCited}/20` }}
+              chatgpt={{ pct: chatgptPct, label: `${report.chatgptCited}/20` }}
+            />
+            <ShareRow
+              brand={report.competitor1 || "Top competitor"}
+              claude={{
+                pct: Math.round(report.competitor1ClaudeShare ?? report.competitor1Share),
+              }}
+              chatgpt={{
+                pct: Math.round(report.competitor1ChatgptShare ?? report.competitor1Share),
+              }}
+            />
+            <ShareRow
+              brand={report.competitor2 || "Second competitor"}
+              claude={{
+                pct: Math.round(report.competitor2ClaudeShare ?? report.competitor2Share),
+              }}
+              chatgpt={{
+                pct: Math.round(report.competitor2ChatgptShare ?? report.competitor2Share),
+              }}
+            />
+          </div>
+        </div>
 
-                return (
-                  <div
-                    className={`grid grid-cols-[1.35fr_1fr_1fr] gap-0 border-b border-stone-200 ${index % 2 === 1 ? "bg-stone-50/50" : "bg-white/80"}`}
-                    key={`${row.query}-${index}`}
-                  >
-                    <div className="px-4 py-4 text-sm leading-6 text-stone-900">
-                      {row.query.length > 60 ? `${row.query.slice(0, 60)}…` : row.query}
-                    </div>
-                    <div className="px-4 py-4">
-                      <div className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${claude.className}`}>
-                        {claude.label}
-                      </div>
-                      <p className="mt-2 text-xs leading-5 text-stone-600">
-                        {row.claude?.excerpt || "No provider response captured."}
-                      </p>
-                    </div>
-                    <div className="px-4 py-4">
-                      <div className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${chatgpt.className}`}>
-                        {chatgpt.label}
-                      </div>
-                      <p className="mt-2 text-xs leading-5 text-stone-600">
-                        {row.chatgpt?.excerpt || "No provider response captured."}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+        <div className="mt-12 max-w-3xl text-base leading-relaxed text-[var(--foreground)]">
+          {report.executiveSummary}
+        </div>
+      </section>
+
+      <hr className="section-divider" />
+
+      {/* -------------------------------------------------------------- */}
+      {/*  Query-level results                                           */}
+      {/* -------------------------------------------------------------- */}
+      <section className="py-16 md:py-20" id="queries">
+        <div className="grid gap-6 md:grid-cols-[auto_1fr] md:gap-16">
+          <div className="md:max-w-xs">
+            <span className="ui-kicker">02 · Query results</span>
+            <h2 className="mt-3 text-3xl tracking-tight md:text-4xl">
+              What AI says when your buyers ask.
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed">
+              Exactly what Claude and ChatGPT said when real buyer-intent
+              queries were tested.
+            </p>
+          </div>
+
+          <div className="grid gap-0">
+            <div className="grid grid-cols-[1.4fr_1fr_1fr] gap-6 border-b border-[var(--border-strong)] py-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+              <span>Query</span>
+              <span>Claude</span>
+              <span>ChatGPT</span>
             </div>
-          </section>
 
-          <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <article className="surface-card rounded-[2rem] p-6" id="gaps">
-              <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
-                Gap Analysis
-              </p>
-              <p className="mt-4 text-sm leading-7 text-stone-700">{report.gapAnalysis}</p>
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <div className="rounded-[1.5rem] border border-stone-200 bg-stone-50/80 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
-                    Bing indexed pages
-                  </p>
-                  <p className="mt-2 text-3xl font-semibold text-stone-950">{report.bingPageCount}</p>
-                </div>
-                <div className="rounded-[1.5rem] border border-stone-200 bg-stone-50/80 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
-                    Brave status
-                  </p>
-                  <p className="mt-2 text-3xl font-semibold text-stone-950">
-                    {report.braveIndexed ? "Indexed" : "Not indexed"}
-                  </p>
-                </div>
-              </div>
-            </article>
+            {report.queryResults.map((row, index) => {
+              const claude = resultState(row.claude);
+              const chatgpt = resultState(row.chatgpt);
 
-            <article className="surface-card rounded-[2rem] p-6" id="roadmap">
-              <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
-                Fix Roadmap
-              </p>
-              <div className="mt-4 grid gap-3">
-                {fixes.map((fix, index) => (
-                  <div className="rounded-[1.4rem] border border-stone-200 bg-stone-50/70 p-4" key={`${fix}-${index}`}>
-                    <p className="text-sm font-semibold text-stone-950">
-                      {index + 1}. {fix}
+              return (
+                <div
+                  key={`${row.query}-${index}`}
+                  className="grid grid-cols-[1.4fr_1fr_1fr] gap-6 border-b border-[var(--border)] py-5"
+                >
+                  <p className="text-sm leading-relaxed text-[var(--foreground)]">
+                    {row.query.length > 72 ? `${row.query.slice(0, 72)}…` : row.query}
+                  </p>
+
+                  <div>
+                    <ResultPill state={claude} />
+                    <p className="mt-2 text-xs leading-5 text-[var(--foreground-muted)]">
+                      {row.claude?.excerpt || "—"}
                     </p>
                   </div>
-                ))}
-              </div>
-              <div className="mt-6 rounded-[1.5rem] border border-[rgba(72,52,40,0.12)] bg-[rgba(255,252,247,0.72)] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
-                  60-Day Projection
-                </p>
-                <p className="mt-3 text-sm leading-7 text-stone-700">{report.projection}</p>
-              </div>
-            </article>
-          </section>
-
-          <section className="surface-card rounded-[2rem] p-6" id="implementation">
-            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
-              Implementation Pack
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-stone-950">
-              Ready-to-paste schema templates
-            </h2>
-            <p className="mt-2 text-sm leading-7 text-stone-700">
-              These templates are prefilled for {domain}. Hand them to engineering with the fix
-              roadmap so the audit turns into shipped structured data quickly.
-            </p>
-
-            <div className="mt-6 grid gap-5">
-              {report.schemaTemplates.map((template) => (
-                <article
-                  className="rounded-[1.7rem] border border-stone-200 bg-stone-50/60 p-5"
-                  key={template.id}
-                >
-                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                    <div>
-                      <p className="text-lg font-semibold text-stone-950">{template.title}</p>
-                      <p className="text-sm text-stone-600">
-                        {template.filename} · {template.placement}
-                      </p>
-                    </div>
+                  <div>
+                    <ResultPill state={chatgpt} />
+                    <p className="mt-2 text-xs leading-5 text-[var(--foreground-muted)]">
+                      {row.chatgpt?.excerpt || "—"}
+                    </p>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-stone-700">{template.whyItMatters}</p>
-                  <pre className="mt-4 overflow-x-auto rounded-[1.3rem] border border-stone-200 bg-[#f7f0e7] p-4 text-xs leading-6 text-stone-800">
-                    <code>{template.code}</code>
-                  </pre>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <div className="rounded-[1.7rem] border border-stone-200 bg-stone-50/80 px-5 py-4 text-sm text-stone-600">
-            Generated on {formatDate(report.generatedAt)} · Order reference {compactReference(reference)}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
+
+      <hr className="section-divider" />
+
+      {/* -------------------------------------------------------------- */}
+      {/*  Gap analysis                                                  */}
+      {/* -------------------------------------------------------------- */}
+      <section className="py-16 md:py-20" id="gaps">
+        <div className="grid gap-10 md:grid-cols-[auto_1fr] md:gap-16">
+          <div className="md:max-w-xs">
+            <span className="ui-kicker">03 · Gap analysis</span>
+            <h2 className="mt-3 text-3xl tracking-tight md:text-4xl">
+              Why you&rsquo;re missing.
+            </h2>
+          </div>
+
+          <div>
+            <p className="max-w-2xl text-base leading-relaxed text-[var(--foreground)]">
+              {report.gapAnalysis}
+            </p>
+
+            <dl className="mt-10 grid grid-cols-2 gap-10 md:max-w-lg">
+              <StatusCell label="Bing indexed pages" value={String(report.bingPageCount)} />
+              <StatusCell label="Brave status" value={report.braveIndexed ? "Indexed" : "Not indexed"} />
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <hr className="section-divider" />
+
+      {/* -------------------------------------------------------------- */}
+      {/*  Fix roadmap                                                    */}
+      {/* -------------------------------------------------------------- */}
+      <section className="py-16 md:py-20" id="roadmap">
+        <div className="grid gap-10 md:grid-cols-[auto_1fr] md:gap-16">
+          <div className="md:max-w-xs">
+            <span className="ui-kicker">04 · Fix roadmap</span>
+            <h2 className="mt-3 text-3xl tracking-tight md:text-4xl">
+              Ship these, in order.
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed">
+              Ranked by leverage. Start at the top — each fix compounds the
+              next.
+            </p>
+          </div>
+
+          <div>
+            <div className="grid gap-0">
+              {fixes.map((fix, index) => (
+                <div
+                  key={`${fix}-${index}`}
+                  className="grid grid-cols-[auto_1fr] items-start gap-8 border-t border-[var(--border)] py-6 last:border-b"
+                >
+                  <span className="font-display text-2xl tracking-tight text-[var(--foreground-subtle)]">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <p className="text-base leading-relaxed text-[var(--foreground)]">
+                    {fix}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-10 rounded-[var(--radius-md)] border border-[var(--accent)]/25 bg-[var(--accent-soft)] p-6">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent-deep)]">
+                60-day projection
+              </span>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--accent-deep)]">
+                {report.projection}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <hr className="section-divider" />
+
+      {/* -------------------------------------------------------------- */}
+      {/*  Implementation pack                                            */}
+      {/* -------------------------------------------------------------- */}
+      <section className="py-16 md:py-20" id="implementation">
+        <div className="grid gap-6 md:grid-cols-[auto_1fr] md:gap-16">
+          <div className="md:max-w-xs">
+            <span className="ui-kicker">05 · Implementation pack</span>
+            <h2 className="mt-3 text-3xl tracking-tight md:text-4xl">
+              Ready-to-paste schema.
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed">
+              Prefilled for {domain}. Hand to engineering with the roadmap.
+            </p>
+          </div>
+
+          <div className="grid gap-10">
+            {(report.schemaTemplates ?? []).map((template) => (
+              <article key={template.id} className="grid gap-4">
+                <div>
+                  <p className="text-lg font-medium text-[var(--foreground)]">
+                    {template.title}
+                  </p>
+                  <p className="text-xs text-[var(--foreground-subtle)]">
+                    {template.filename} · {template.placement}
+                  </p>
+                </div>
+                <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+                  {template.whyItMatters}
+                </p>
+                <pre className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-muted)] p-5 text-xs leading-6 text-[var(--foreground)]">
+                  <code>{template.code}</code>
+                </pre>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <hr className="section-divider" />
+
+      <section className="py-10 text-sm text-[var(--foreground-muted)]">
+        Generated on {formatDate(report.generatedAt)} · Order reference{" "}
+        <span className="font-medium text-[var(--foreground)]">
+          {compactReference(reference)}
+        </span>
+      </section>
     </main>
+  );
+}
+
+function StatusCell(props: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+        {props.label}
+      </dt>
+      <dd className="mt-2 font-display text-3xl tracking-tight text-[var(--foreground)]">
+        {props.value}
+      </dd>
+    </div>
+  );
+}
+
+function ShareRow(props: {
+  brand: string;
+  you?: boolean;
+  claude: { pct: number; label?: string };
+  chatgpt: { pct: number; label?: string };
+}) {
+  return (
+    <div className="grid gap-3 border-t border-[var(--border)] py-5 first:border-t-0 first:pt-0">
+      <div className="flex items-center justify-between gap-4">
+        <p
+          className={`text-base ${
+            props.you
+              ? "font-semibold text-[var(--foreground)]"
+              : "font-medium text-[var(--foreground-muted)]"
+          }`}
+        >
+          {props.brand}
+          {props.you ? (
+            <span className="ml-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
+              You
+            </span>
+          ) : null}
+        </p>
+      </div>
+
+      <ShareBar
+        label="Claude"
+        pct={props.claude.pct}
+        detail={props.claude.label}
+        you={props.you}
+      />
+      <ShareBar
+        label="ChatGPT"
+        pct={props.chatgpt.pct}
+        detail={props.chatgpt.label}
+        you={props.you}
+      />
+    </div>
+  );
+}
+
+function ShareBar(props: {
+  label: string;
+  pct: number;
+  detail?: string;
+  you?: boolean;
+}) {
+  const pct = Math.min(100, Math.max(0, props.pct));
+  return (
+    <div className="grid grid-cols-[80px_1fr_auto] items-center gap-4">
+      <span className="text-xs font-medium uppercase tracking-[0.1em] text-[var(--foreground-subtle)]">
+        {props.label}
+      </span>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-muted)]">
+        <div
+          className={`h-full rounded-full ${
+            props.you ? "bg-[var(--accent)]" : "bg-[var(--foreground-subtle)]"
+          }`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="text-xs font-semibold text-[var(--foreground)]">
+        {pct}%{props.detail ? ` · ${props.detail}` : ""}
+      </span>
+    </div>
+  );
+}
+
+function ResultPill(props: {
+  state: { label: string; tone: "accent" | "muted" | "danger" };
+}) {
+  const toneClass =
+    props.state.tone === "accent"
+      ? "border-[var(--accent)]/25 bg-[var(--accent-soft)] text-[var(--accent-deep)]"
+      : props.state.tone === "danger"
+        ? "border-[var(--danger)]/25 bg-[rgba(154,58,47,0.06)] text-[var(--danger)]"
+        : "border-[var(--border)] bg-[var(--surface-muted)] text-[var(--foreground-muted)]";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${toneClass}`}
+    >
+      {props.state.label}
+    </span>
   );
 }

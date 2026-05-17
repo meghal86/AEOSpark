@@ -29,7 +29,7 @@ const DIMENSION_LABELS = [
 export function ScoreRunner({ url }: { url: string }) {
   const router = useRouter();
   const [error, setError] = useState("");
-  const [step, setStep] = useState("Fetching your website...");
+  const [step, setStep] = useState("Fetching your website…");
   const [revealed, setRevealed] = useState(0);
   const [pollCount, setPollCount] = useState(0);
   const intervalRef = useRef<number | null>(null);
@@ -80,7 +80,7 @@ export function ScoreRunner({ url }: { url: string }) {
             return;
           }
 
-          setStep(pollPayload.data?.step || "Calculating your score...");
+          setStep(pollPayload.data?.step || "Calculating your score…");
         };
 
         await poll();
@@ -133,18 +133,14 @@ export function ScoreRunner({ url }: { url: string }) {
 
   if (error) {
     return (
-      <section className="surface-panel grid gap-5 rounded-[2rem] p-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-            <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-semibold text-stone-950">Unable to run score</h1>
-        </div>
-        <p className="text-base leading-7 text-stone-700">{error}</p>
+      <section className="pt-16 pb-24 md:pt-24">
+        <span className="ui-kicker status-danger">Score failed</span>
+        <h1 className="mt-4 text-5xl tracking-tight md:text-6xl">
+          Unable to run score
+        </h1>
+        <p className="mt-5 max-w-2xl text-base leading-relaxed">{error}</p>
         <button
-          className="btn-primary inline-flex h-12 w-fit items-center justify-center rounded-2xl px-5 text-sm font-bold transition"
+          className="btn-primary mt-8 inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] px-5 text-sm font-semibold transition"
           onClick={() => window.location.reload()}
           type="button"
         >
@@ -154,46 +150,72 @@ export function ScoreRunner({ url }: { url: string }) {
     );
   }
 
-  return (
-    <section className="grid gap-6">
-      <div className="surface-panel grid gap-5 rounded-[2rem] p-6">
-        <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
-          Running your score
-        </p>
-        <h1 className="text-4xl font-semibold text-stone-950">
-          Analyzing {url}
-        </h1>
-        <div className="flex items-center gap-3">
-          <LoadingSpinner size="sm" className="text-[var(--accent)]" />
-          <p className="text-base leading-7 text-stone-700">{step}</p>
-        </div>
+  const progressPct = Math.min((revealed / 7) * 100, 100);
 
-        {/* Progress bar */}
-        <div className="h-1.5 overflow-hidden rounded-full bg-stone-200">
+  return (
+    <section className="pt-16 pb-24 md:pt-24">
+      <div className="flex items-center gap-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
+        <LoadingSpinner size="sm" className="text-[var(--accent)]" />
+        Running your score
+      </div>
+
+      <h1 className="mt-6 text-5xl tracking-tight md:text-6xl">
+        Analyzing{" "}
+        <span className="text-[var(--accent)]">{url}</span>
+      </h1>
+
+      <p className="mt-5 text-base leading-relaxed text-[var(--foreground-muted)]">
+        {step}
+      </p>
+
+      {/* Progress bar */}
+      <div className="mt-10 grid gap-2">
+        <div className="h-[2px] overflow-hidden rounded-full bg-[var(--divider)]">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-soft)] transition-all duration-700 ease-out"
-            style={{ width: `${Math.min((revealed / 7) * 100, 100)}%` }}
+            className="h-full rounded-full bg-[var(--accent)] transition-all duration-700 ease-out"
+            style={{ width: `${progressPct}%` }}
           />
+        </div>
+        <div className="flex items-center justify-between text-xs text-[var(--foreground-subtle)]">
+          <span>
+            {revealed} of 7 signals scored
+          </span>
+          <span>{Math.round(progressPct)}%</span>
         </div>
       </div>
 
-      <div className="app-stagger-in grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {/* Dimension list - report style */}
+      <div className="app-stagger-in mt-16 grid gap-0">
         {DIMENSION_LABELS.map((label, index) => {
           const isRevealed = revealed > index;
           return (
             <article
-              className={`surface-card rounded-3xl p-5 transition duration-500 ${
-                isRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
-              }`}
+              className="grid grid-cols-[auto_1fr_auto] items-center gap-6 border-t border-[var(--border)] py-5 last:border-b"
               key={label}
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
-                {label}
-              </p>
-              <div className={`mt-4 h-8 w-16 rounded-xl bg-stone-200 ${!isRevealed ? "app-skeleton-pulse" : ""}`} />
-              <div className={`mt-5 h-2 rounded-full bg-stone-200 ${!isRevealed ? "app-skeleton-pulse" : ""}`} />
-              <div className={`mt-5 h-4 rounded-xl bg-stone-100 ${!isRevealed ? "app-skeleton-pulse" : ""}`} />
-              <div className={`mt-3 h-4 w-11/12 rounded-xl bg-stone-100 ${!isRevealed ? "app-skeleton-pulse" : ""}`} />
+              <span className="font-display text-xl tracking-tight text-[var(--foreground-subtle)]">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <p className="text-base font-medium text-[var(--foreground)]">
+                  {label}
+                </p>
+                <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
+                  {isRevealed ? "Scored" : "Pending…"}
+                </p>
+              </div>
+              <div className="flex h-7 w-16 items-center justify-end">
+                {isRevealed ? (
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                    <span className="text-sm font-medium text-[var(--foreground)]">
+                      ✓
+                    </span>
+                  </div>
+                ) : (
+                  <div className="app-skeleton-pulse h-2 w-12 rounded-full bg-[var(--divider)]" />
+                )}
+              </div>
             </article>
           );
         })}

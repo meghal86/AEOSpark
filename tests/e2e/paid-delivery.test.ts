@@ -188,7 +188,7 @@ describe("paid delivery loop", () => {
       url: mockOrder.website,
     });
 
-    expect(result.pdfUrl).toBe("https://storage.example/report.pdf");
+    expect(result.pdfUrl).toBe("https://aeospark.test/api/reports/pi_123/download");
     expect(sendAuditDeliveredEmail).toHaveBeenCalledTimes(1);
     expect(updateOrderDelivery).toHaveBeenLastCalledWith(mockOrder.id, {
       deliveredAt: expect.any(Date),

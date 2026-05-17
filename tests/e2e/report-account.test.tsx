@@ -3,8 +3,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getAuditDeliveryByReference = vi.fn();
-const listDeliveredReportsByEmail = vi.fn();
 const getUser = vi.fn();
+const getUserProfile = vi.fn();
+const findManyOrders = vi.fn();
 
 vi.mock("next/link", () => ({
   default: ({ href, children, ...props }: { href: string; children: ReactNode }) => (
@@ -18,17 +19,36 @@ vi.mock("@/components/page-utility-nav", () => ({
   PageUtilityNav: () => <div>nav</div>,
 }));
 
+vi.mock("@/components/site-header", () => ({
+  SiteHeader: () => <header>AEOSpark</header>,
+}));
+
+vi.mock("@/components/buyer-session-sync", () => ({
+  BuyerSessionSync: () => null,
+}));
+
 vi.mock("@/components/report-auto-refresh", () => ({
   ReportAutoRefresh: () => null,
 }));
 
-vi.mock("@/components/account-access-form", () => ({
-  AccountAccessForm: () => <form>account access</form>,
+vi.mock("@/components/remeasure-button", () => ({
+  RemeasureButton: () => <button>Run monthly re-measurement</button>,
 }));
 
 vi.mock("@/lib/audit-delivery", () => ({
   getAuditDeliveryByReference,
-  listDeliveredReportsByEmail,
+}));
+
+vi.mock("@/lib/auth", () => ({
+  getUserProfile,
+}));
+
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    order: {
+      findMany: findManyOrders,
+    },
+  },
 }));
 
 vi.mock("@/lib/supabase-auth", () => ({
@@ -112,26 +132,41 @@ describe("report and account access", () => {
 
   it("renders delivered reports in the buyer account", async () => {
     getUser.mockResolvedValue({ data: { user: { email: "buyer@example.com" } } });
-    listDeliveredReportsByEmail.mockResolvedValue([
+    getUserProfile.mockResolvedValue({
+      userId: "00000000-0000-4000-8000-000000000001",
+      email: "buyer@example.com",
+      name: "Buyer",
+      company: "AlphaWhale",
+      website: "https://alphawhale.app",
+    });
+    findManyOrders.mockResolvedValue([
       {
-        orderId: "order_123",
-        reference: "pi_123",
-        domain: "alphawhale.app",
-        deliveredAt: "2026-03-22T00:00:00.000Z",
+        id: "00000000-0000-4000-8000-000000000002",
+        url: "https://alphawhale.app",
+        status: "delivered",
+        stripePaymentIntentId: "pi_123",
+        createdAt: new Date("2026-03-22T00:00:00.000Z"),
+        deliveredAt: new Date("2026-03-22T00:00:00.000Z"),
+        measurementWindowEndsAt: new Date("2026-06-20T00:00:00.000Z"),
         reportUrl: "https://storage.example/report.pdf",
-        report: {
-          claudeCited: 7,
-          chatgptCited: 5,
-        },
+        scoreHistory: [
+          {
+            id: "history_1",
+            runNumber: 1,
+            citationClaude: 35,
+            citationChatgpt: 25,
+            createdAt: new Date("2026-03-22T00:00:00.000Z"),
+          },
+        ],
       },
     ]);
 
     const AccountPage = (await import("@/app/account/page")).default;
     const html = renderToStaticMarkup(await AccountPage());
 
-    expect(html).toContain("Your delivered reports");
+    expect(html).toContain("Measurement history");
     expect(html).toContain("alphawhale.app");
-    expect(html).toContain("View Report");
+    expect(html).toContain("View report");
     expect(html).toContain("Download PDF");
   });
 });

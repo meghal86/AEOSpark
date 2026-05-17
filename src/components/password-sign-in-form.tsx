@@ -40,7 +40,7 @@ export function PasswordSignInForm() {
       if (error) {
         if (error.message === "Invalid login credentials") {
           throw new Error(
-            "Invalid email or password. If you originally used an email link, reset your password first or use the email-link sign-in option below.",
+            "Invalid email or password. If you never set a password, reset it first or continue with Google.",
           );
         }
         throw error;
@@ -60,7 +60,7 @@ export function PasswordSignInForm() {
       <label className="grid gap-2 text-sm font-medium text-stone-700">
         Work email
         <input
-          className="input-field h-14 rounded-2xl px-4 text-base"
+          className="input-field h-12 px-4 text-sm"
           autoComplete="email"
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@company.com"
@@ -73,7 +73,7 @@ export function PasswordSignInForm() {
       <label className="grid gap-2 text-sm font-medium text-stone-700">
         Password
         <input
-          className="input-field h-14 rounded-2xl px-4 text-base"
+          className="input-field h-12 px-4 text-sm"
           autoComplete="current-password"
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Your password"
@@ -88,12 +88,12 @@ export function PasswordSignInForm() {
       </p>
 
       <button
-        className="btn-primary inline-flex h-14 items-center justify-center gap-2 rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
+        className="btn-accent inline-flex h-12 items-center justify-center gap-2 rounded-[var(--radius-md)] px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting && <LoadingSpinner size="sm" className="text-white/70" />}
-        {isSubmitting ? "Signing in..." : "Sign in"}
+        {isSubmitting && <LoadingSpinner size="sm" className="text-white/80" />}
+        {isSubmitting ? "Signing in…" : "Sign in"}
       </button>
 
       {message ? <p className="text-sm leading-7 text-stone-600">{message}</p> : null}

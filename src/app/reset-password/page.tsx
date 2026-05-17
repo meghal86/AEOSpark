@@ -5,40 +5,41 @@ import { SiteHeader } from "@/components/site-header";
 
 export default function ResetPasswordPage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-8 px-6 py-10 md:px-10">
+    <main className="mx-auto w-full max-w-5xl px-6 py-6 md:px-10 md:py-10">
       <SiteHeader minimal />
 
-      <section className="surface-panel rounded-[2.5rem] p-8">
-        <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.22em]">
-          Set new password
-        </p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-stone-950">
-          Choose a new password
+      <section className="app-fade-up pt-16 pb-24 md:pt-24">
+        <span className="ui-kicker">Set new password</span>
+        <h1 className="mt-4 text-5xl tracking-tight md:text-6xl">
+          Choose a new password.
         </h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-stone-700">
-          Once you update your password, you&apos;ll be sent straight into your AEOSpark account.
+        <p className="mt-5 max-w-2xl text-base leading-relaxed">
+          Once you update your password, you&rsquo;ll be sent straight into your
+          AEOSpark account.
         </p>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_0.9fr]">
-          <div className="surface-card rounded-[2rem] p-6">
-            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.18em]">
-              Reset password
-            </p>
-            <div className="mt-4">
+        <div className="mt-12 grid gap-12 lg:grid-cols-[1fr_1px_1fr] lg:gap-16">
+          <div>
+            <span className="ui-kicker">New password</span>
+            <div className="mt-6">
               <ResetPasswordForm />
             </div>
           </div>
 
-          <div className="surface-card rounded-[2rem] p-6">
-            <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.18em]">
-              Need another email?
+          <div className="hidden bg-[var(--border)] lg:block" aria-hidden />
+
+          <div className="text-sm leading-relaxed">
+            <span className="ui-kicker">Link expired?</span>
+            <p className="mt-3">
+              Reset links expire quickly for security. Request a fresh one and
+              use only the newest email.
             </p>
-            <div className="mt-4 grid gap-4 text-sm leading-7 text-stone-700">
-              <p>If your reset link expired, request a fresh one and use the newest email only.</p>
-              <Link className="font-semibold text-stone-950 underline" href="/forgot-password">
-                Request another reset link
-              </Link>
-            </div>
+            <Link
+              className="mt-4 inline-flex font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
+              href="/forgot-password"
+            >
+              Request another reset link →
+            </Link>
           </div>
         </div>
       </section>

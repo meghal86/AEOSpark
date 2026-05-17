@@ -26,31 +26,31 @@ export function PurchasedHomeBanner() {
       : `/report/${session.orderReference}`;
 
   return (
-    <section className="surface-card rounded-[1.8rem] border border-emerald-200/80 bg-emerald-50/80 p-5">
+    <section className="mb-8 rounded-[var(--radius-md)] border border-[var(--accent)]/25 bg-[var(--accent-soft)] p-5">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="grid gap-1">
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.2em] text-emerald-900">
+          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent-deep)]">
             {statusLabel}
-          </p>
-          <p className="text-sm leading-7 text-emerald-950">
-            You already have an AEOSpark audit for{" "}
-            <span className="font-semibold">{session.domain}</span>. We&apos;ll keep this linked to{" "}
+          </span>
+          <p className="text-sm leading-relaxed text-[var(--accent-deep)]">
+            You already have an audit for{" "}
+            <span className="font-semibold">{session.domain}</span>, linked to{" "}
             <span className="font-semibold">{session.email}</span>.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
           <Link
-            className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
+            className="btn-secondary inline-flex h-10 items-center justify-center rounded-[var(--radius-sm)] px-4 text-sm font-medium transition"
             href="/account"
           >
-            My Reports
+            My reports
           </Link>
           <Link
-            className="btn-primary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
+            className="btn-accent inline-flex h-10 items-center justify-center rounded-[var(--radius-sm)] px-4 text-sm font-semibold transition"
             href={targetHref}
           >
-            {session.status === "delivered" ? "Open Report" : "Track Audit"}
+            {session.status === "delivered" ? "Open report" : "Track audit"}
           </Link>
         </div>
       </div>

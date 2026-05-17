@@ -12,48 +12,54 @@ export function FounderTrustCard(props?: { compact?: boolean }) {
     .toUpperCase();
 
   return (
-    <div className="rounded-[1.7rem] border border-[rgba(72,52,40,0.12)] bg-[rgba(255,252,247,0.72)] p-5">
+    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-6">
       <div className="flex items-start gap-4">
         {founderProfile.photoUrl ? (
           <Image
             alt={founderProfile.name}
-            className="h-16 w-16 rounded-[1.25rem] object-cover"
-            height={64}
+            className="h-14 w-14 rounded-full object-cover"
+            height={56}
             src={founderProfile.photoUrl}
             unoptimized
-            width={64}
+            width={56}
           />
         ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded-[1.25rem] bg-[linear-gradient(135deg,#f3e6d4,#ead7c1)] text-lg font-semibold text-stone-950">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-soft)] text-sm font-semibold text-[var(--accent-deep)]">
             {initials}
           </div>
         )}
-        <div className="grid gap-1">
-          <p className="text-sm font-semibold text-stone-950">{founderProfile.name}</p>
-          <p className="text-sm text-stone-700">{founderProfile.role}</p>
+        <div className="grid gap-0.5">
+          <p className="text-sm font-medium text-[var(--foreground)]">
+            {founderProfile.name}
+          </p>
+          <p className="text-sm text-[var(--foreground-muted)]">{founderProfile.role}</p>
         </div>
       </div>
 
-      <p className={`mt-4 text-sm leading-7 text-stone-700 ${compact ? "" : "max-w-2xl"}`}>
+      <p
+        className={`mt-5 text-sm leading-relaxed text-[var(--foreground-muted)] ${
+          compact ? "" : "max-w-2xl"
+        }`}
+      >
         {founderProfile.bio}
       </p>
 
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="mt-5 flex flex-wrap gap-5 border-t border-[var(--border)] pt-4 text-sm">
         {founderProfile.linkedInUrl ? (
           <a
-            className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
+            className="font-medium text-[var(--foreground-muted)] transition hover:text-[var(--foreground)]"
             href={founderProfile.linkedInUrl}
             rel="noreferrer"
             target="_blank"
           >
-            View LinkedIn
+            LinkedIn →
           </a>
         ) : null}
         <a
-          className="btn-secondary inline-flex h-11 items-center justify-center rounded-2xl px-4 text-sm font-semibold transition"
+          className="font-medium text-[var(--foreground-muted)] transition hover:text-[var(--foreground)]"
           href="mailto:hello@aeospark.com"
         >
-          Email Founder
+          Email →
         </a>
       </div>
     </div>

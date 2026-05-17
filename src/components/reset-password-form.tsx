@@ -121,12 +121,15 @@ export function ResetPasswordForm() {
   if (status === "invalid") {
     return (
       <div className="grid gap-4">
-        <p className="text-sm leading-7 text-stone-700">
+        <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
           {message ||
             "This reset link has expired or is no longer valid. Request a new password reset email to continue."}
         </p>
-        <Link className="font-semibold text-stone-950 underline" href="/forgot-password">
-          Request a new reset link
+        <Link
+          className="font-medium text-[var(--foreground)] underline-offset-4 hover:underline"
+          href="/forgot-password"
+        >
+          Request a new reset link →
         </Link>
       </div>
     );
@@ -134,10 +137,10 @@ export function ResetPasswordForm() {
 
   return (
     <form className="grid gap-4" onSubmit={handleSubmit}>
-      <label className="grid gap-2 text-sm font-medium text-stone-700">
+      <label className="grid gap-2 text-sm font-medium text-[var(--foreground)]">
         New password
         <input
-          className="input-field h-14 rounded-2xl px-4 text-base"
+          className="input-field h-12 px-4 text-sm"
           autoComplete="new-password"
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Create a new password"
@@ -147,10 +150,10 @@ export function ResetPasswordForm() {
         />
       </label>
 
-      <label className="grid gap-2 text-sm font-medium text-stone-700">
+      <label className="grid gap-2 text-sm font-medium text-[var(--foreground)]">
         Confirm new password
         <input
-          className="input-field h-14 rounded-2xl px-4 text-base"
+          className="input-field h-12 px-4 text-sm"
           autoComplete="new-password"
           onChange={(event) => setConfirmPassword(event.target.value)}
           placeholder="Confirm your new password"
@@ -160,23 +163,25 @@ export function ResetPasswordForm() {
         />
       </label>
 
-      <p className="text-xs leading-6 text-stone-500">
+      <p className="text-xs leading-relaxed text-[var(--foreground-subtle)]">
         Use at least 8 characters with uppercase, lowercase, and a number.
       </p>
 
       <button
-        className="btn-primary inline-flex h-14 items-center justify-center rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
+        className="btn-accent inline-flex h-12 items-center justify-center rounded-[var(--radius-md)] px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
         disabled={isSubmitting || status === "checking"}
         type="submit"
       >
         {isSubmitting
-          ? "Updating password..."
+          ? "Updating password…"
           : status === "checking"
-            ? "Verifying reset link..."
-            : "Set new password"}
+            ? "Verifying reset link…"
+            : "Set new password →"}
       </button>
 
-      {message ? <p className="text-sm text-stone-600">{message}</p> : null}
+      {message ? (
+        <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">{message}</p>
+      ) : null}
     </form>
   );
 }

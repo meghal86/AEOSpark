@@ -19,107 +19,177 @@ export default async function AuditPage({
     notFound();
   }
 
+  const clientPct = audit.citationBaselinePct;
+  const competitorPct = audit.competitorCitationPct;
+
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-10">
+    <main className="mx-auto w-full max-w-6xl px-6 py-6 md:px-10 md:py-10">
       <SiteHeader />
-      <section className="surface-panel app-fade-up grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div>
-          <p className="ui-kicker text-xs font-semibold uppercase tracking-[0.24em]">
-            Audit report
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold text-stone-950 md:text-5xl">
-            {audit.companyName}
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-stone-700">
-            {audit.executiveSummary}
-          </p>
-        </div>
 
-        <div className="grid gap-3">
-          <div className="surface-card">
-            <p className="text-xs uppercase tracking-[0.2em] text-stone-500">
-              Client citation share
-            </p>
-            <p className="mt-3 text-5xl font-semibold text-stone-950">
-              {audit.citationBaselinePct}%
-            </p>
-          </div>
-          <div className="surface-card">
-            <p className="text-xs uppercase tracking-[0.2em] text-stone-500">
-              Best competitor
-            </p>
-            <p className="mt-3 text-5xl font-semibold text-stone-950">
-              {audit.competitorCitationPct}%
-            </p>
-          </div>
-          <div className="surface-card">
-            <p className="text-xs uppercase tracking-[0.2em] text-stone-500">
-              Delivery state
-            </p>
-            <p className="mt-3 text-lg font-semibold text-stone-950">Report ready</p>
-          </div>
+      {/* Masthead */}
+      <section className="app-fade-up pt-16 pb-16 md:pt-24">
+        <span className="ui-kicker">Audit report</span>
+        <h1 className="mt-4 text-5xl tracking-tight md:text-6xl">
+          {audit.companyName}
+        </h1>
+        <p className="mt-5 max-w-2xl text-base leading-relaxed">
+          {audit.executiveSummary}
+        </p>
+
+        <div className="mt-10 flex flex-wrap gap-3">
+          <a
+            className="btn-accent inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] px-5 text-sm font-semibold transition"
+            href={`/api/audits/${audit.id}/report.pdf`}
+          >
+            Download PDF →
+          </a>
+          <Link
+            className="btn-secondary inline-flex h-11 items-center justify-center rounded-[var(--radius-md)] px-5 text-sm font-medium transition"
+            href={`/monitor/${order.clientId}`}
+          >
+            Open client portal →
+          </Link>
         </div>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-[1fr_1fr]">
-        <article className="surface-panel">
-          <p className="ui-kicker text-xs uppercase tracking-[0.24em]">Priority fixes</p>
-          <div className="mt-5 grid gap-3">
-            {audit.topFixes.map((fix) => (
-              <div
-                className="surface-card"
-                key={fix.id}
-              >
-                <p className="text-sm font-semibold text-stone-950">{fix.title}</p>
-                <p className="mt-2 text-sm text-stone-700">{fix.whyItMatters}</p>
-              </div>
-            ))}
-          </div>
-        </article>
+      <hr className="section-divider" />
 
-        <article className="surface-panel">
-          <p className="ui-kicker text-xs uppercase tracking-[0.24em]">90-day roadmap</p>
-          <div className="mt-5 grid gap-3">
-            {audit.roadmap.map((phase) => (
-              <div
-                className="surface-card"
-                key={phase.title}
-              >
-                <p className="text-sm font-semibold text-stone-950">{phase.title}</p>
-                <p className="mt-2 text-sm text-stone-700">{phase.detail}</p>
-              </div>
-            ))}
+      {/* Citation share */}
+      <section className="py-16 md:py-20">
+        <div className="grid gap-10 md:grid-cols-[auto_1fr] md:gap-16">
+          <div className="md:max-w-xs">
+            <span className="ui-kicker">01 · Citation share</span>
+            <h2 className="mt-3 text-3xl tracking-tight md:text-4xl">
+              You vs. the best competitor.
+            </h2>
           </div>
-        </article>
-      </section>
 
-      <section className="surface-panel">
-        <p className="ui-kicker text-xs uppercase tracking-[0.24em]">Pages analyzed</p>
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          {audit.pagesAnalyzed.map((page) => (
-            <div
-              className="surface-card text-sm text-stone-700"
-              key={page}
-            >
-              {page}
+          <dl className="grid grid-cols-2 gap-10">
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+                Your citation share
+              </dt>
+              <dd className="mt-3 font-display text-6xl tracking-tight text-[var(--accent)]">
+                {clientPct}%
+              </dd>
+              <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-muted)]">
+                <div
+                  className="h-full rounded-full bg-[var(--accent)]"
+                  style={{ width: `${Math.min(100, Math.max(0, clientPct))}%` }}
+                />
+              </div>
             </div>
-          ))}
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--foreground-subtle)]">
+                Best competitor
+              </dt>
+              <dd className="mt-3 font-display text-6xl tracking-tight text-[var(--foreground)]">
+                {competitorPct}%
+              </dd>
+              <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-muted)]">
+                <div
+                  className="h-full rounded-full bg-[var(--foreground-subtle)]"
+                  style={{ width: `${Math.min(100, Math.max(0, competitorPct))}%` }}
+                />
+              </div>
+            </div>
+          </dl>
         </div>
       </section>
 
-      <section className="flex flex-wrap gap-3">
-        <a
-          className="btn-primary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-bold transition"
-          href={`/api/audits/${audit.id}/report.pdf`}
-        >
-          Download PDF
-        </a>
-        <Link
-          className="btn-secondary inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold transition"
-          href={`/monitor/${order.clientId}`}
-        >
-          Open client portal
-        </Link>
+      <hr className="section-divider" />
+
+      {/* Priority fixes */}
+      <section className="py-16 md:py-20">
+        <div className="grid gap-10 md:grid-cols-[auto_1fr] md:gap-16">
+          <div className="md:max-w-xs">
+            <span className="ui-kicker">02 · Priority fixes</span>
+            <h2 className="mt-3 text-3xl tracking-tight md:text-4xl">
+              Ship these first.
+            </h2>
+          </div>
+
+          <div className="grid gap-0">
+            {audit.topFixes.map((fix, index) => (
+              <div
+                key={fix.id}
+                className="grid grid-cols-[auto_1fr] items-start gap-8 border-t border-[var(--border)] py-6 last:border-b"
+              >
+                <span className="font-display text-2xl tracking-tight text-[var(--foreground-subtle)]">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <p className="text-base font-medium text-[var(--foreground)]">
+                    {fix.title}
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                    {fix.whyItMatters}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <hr className="section-divider" />
+
+      {/* Roadmap */}
+      <section className="py-16 md:py-20">
+        <div className="grid gap-10 md:grid-cols-[auto_1fr] md:gap-16">
+          <div className="md:max-w-xs">
+            <span className="ui-kicker">03 · 90-day roadmap</span>
+            <h2 className="mt-3 text-3xl tracking-tight md:text-4xl">
+              Phased rollout.
+            </h2>
+          </div>
+
+          <div className="grid gap-0">
+            {audit.roadmap.map((phase, index) => (
+              <div
+                key={phase.title}
+                className="grid grid-cols-[auto_1fr] items-start gap-8 border-t border-[var(--border)] py-6 last:border-b"
+              >
+                <span className="font-display text-2xl tracking-tight text-[var(--foreground-subtle)]">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <p className="text-base font-medium text-[var(--foreground)]">
+                    {phase.title}
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[var(--foreground-muted)]">
+                    {phase.detail}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <hr className="section-divider" />
+
+      {/* Pages analyzed */}
+      <section className="py-16 md:py-20">
+        <div className="grid gap-10 md:grid-cols-[auto_1fr] md:gap-16">
+          <div className="md:max-w-xs">
+            <span className="ui-kicker">04 · Pages analyzed</span>
+            <h2 className="mt-3 text-3xl tracking-tight md:text-4xl">
+              What we reviewed.
+            </h2>
+          </div>
+
+          <ul className="grid gap-2 text-sm leading-relaxed text-[var(--foreground-muted)] md:grid-cols-2">
+            {audit.pagesAnalyzed.map((page) => (
+              <li
+                key={page}
+                className="border-t border-[var(--border)] py-2 first:border-t-0 md:first:border-t md:[&:nth-child(2)]:border-t"
+              >
+                {page}
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
     </main>
   );

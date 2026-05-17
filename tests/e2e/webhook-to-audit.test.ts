@@ -39,6 +39,17 @@ vi.mock("@/lib/storage", () => ({
   setClientActiveBySubscriptionId: vi.fn(),
 }));
 
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    userProfile: {
+      findUnique: vi.fn(async () => null),
+    },
+    order: {
+      update: vi.fn(async () => null),
+    },
+  },
+}));
+
 vi.mock("@/lib/email-workflows", () => ({
   sendAuditConfirmationEmail,
 }));

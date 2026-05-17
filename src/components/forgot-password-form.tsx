@@ -80,10 +80,10 @@ export function ForgotPasswordForm() {
 
   return (
     <form className="grid gap-4" onSubmit={handleSubmit}>
-      <label className="grid gap-2 text-sm font-medium text-stone-700">
+      <label className="grid gap-2 text-sm font-medium text-[var(--foreground)]">
         Work email
         <input
-          className="input-field h-14 rounded-2xl px-4 text-base"
+          className="input-field h-12 px-4 text-sm"
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@company.com"
           required
@@ -93,18 +93,20 @@ export function ForgotPasswordForm() {
       </label>
 
       <button
-        className="btn-primary inline-flex h-14 items-center justify-center rounded-2xl px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
+        className="btn-accent inline-flex h-12 items-center justify-center rounded-[var(--radius-md)] px-6 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-70"
         disabled={isSubmitting || cooldownSeconds > 0}
         type="submit"
       >
         {isSubmitting
-          ? "Sending reset link..."
+          ? "Sending reset link…"
           : cooldownSeconds > 0
             ? `Try again in ${cooldownSeconds}s`
-            : "Send reset link"}
+            : "Send reset link →"}
       </button>
 
-      {message ? <p className="text-sm leading-7 text-stone-600">{message}</p> : null}
+      {message ? (
+        <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">{message}</p>
+      ) : null}
     </form>
   );
 }
